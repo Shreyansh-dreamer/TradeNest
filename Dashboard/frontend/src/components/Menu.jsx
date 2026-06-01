@@ -53,6 +53,7 @@ const Menu = () => {
     { label: "Holdings", to: "/holdings" },
     { label: "Positions", to: "/positions" },
     { label: "Funds", to: "/funds" },
+    { label: "Predict", to: "/predict" },
   ];
 
   const handleMenuClick = (index) => {

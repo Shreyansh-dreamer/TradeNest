@@ -20,7 +20,6 @@ const Holdings = ({ allHoldings }) => {
     );
   }
 
-  // Graph data
   const labels = allHoldings.map((stock) => stock.name);
   const data = {
     labels,
@@ -73,7 +72,6 @@ const Holdings = ({ allHoldings }) => {
         </table>
       </div>
 
-      {/* Graph with responsive container and margin */}
       <div className="max-w-full mx-auto px-0 md:px-4 mt-8 overflow-x-auto">
         <div className="min-w-[400px] h-[400px] w-full">
           <VerticalGraph data={data} />

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import { onSocket, getLastOrders, emitSocket } from '../socket';
 import { Tooltip } from '@mui/material';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 
@@ -8,32 +8,19 @@ const Orders = () => {
   const [activeId, setActiveId] = useState(null);
 
   const fetchOrders = () => {
-    axios.get("http://localhost:3002/allOrders", {
-      withCredentials: true,
-    }).then((res) => {
-      setAllOrders(res.data);
-    }).catch((err) => {
-      console.error("Error fetching orders:", err);
-    });
+    setAllOrders(getLastOrders());
   };
 
   useEffect(() => {
     fetchOrders();
-
-    const interval = setInterval(()=>{
-      fetchOrders();
-    },300000);
-
-    return ()=> clearInterval(interval);
+    const off = onSocket('orders', (data) => setAllOrders(data || []));
+    return () => off();
   }, []);
 
   const handleDelete = (id) => {
-    axios.delete(`http://localhost:3002/deleteOrder/${id}`,{
-      withCredentials: true,
-    }).then(() => {
-      fetchOrders();
-    }).catch((err) => {
-      console.error("Error deleting order:", err);
+    emitSocket('deleteOrder', id, (res) => {
+      if (res?.error) console.error('Error deleting order:', res.error);
+      // server will emit updated orders; no further action required
     });
   };
 

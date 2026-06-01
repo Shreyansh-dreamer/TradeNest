@@ -1,0 +1,342 @@
+const { Server } = require('socket.io');
+const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
+const { UsersModel } = require('./model/UsersModel');
+const { HoldingsModel } = require('./model/HoldingsModel');
+const { OrdersModel } = require('./model/OrdersModel');
+const axios = require('axios');
+
+let ioInstance = null;
+let yahooFinance = null;
+
+function init(server) {
+  if (ioInstance) return ioInstance;
+  
+  if (!yahooFinance) {
+    try {
+      yahooFinance = require('yahoo-finance2').default;
+    } catch (err) {
+      console.warn('Warning: yahoo-finance2 failed to load. Indices will not be available.');
+      yahooFinance = null;
+    }
+  }
+  
+  const allowedOrigins = ["http://localhost:5173", "http://localhost:5174"];
+  const io = new Server(server, {
+    cors: {
+      origin: allowedOrigins,
+      credentials: true,
+    },
+  });
+
+  io.use((socket, next) => {
+    const cookieHeader = socket.handshake.headers.cookie || '';
+    const tokenMatch = cookieHeader.match(/token=([^;]+)/);
+    const token = tokenMatch && tokenMatch[1];
+    if (!token) return next(new Error('Auth error - token missing'));
+    try {
+      const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+      socket.userId = decoded.id;
+      next();
+    } catch (e) {
+      next(new Error('Auth error - invalid token'));
+    }
+  });
+
+  io.on('connection', async (socket) => {
+    const { userId } = socket;
+    console.log('🟢 Socket connected for user', userId);
+    socket.join(userId);
+    // Emit initial data
+    await emitWatchlist(userId);
+    await emitOrders(userId);
+    await emitFavourites(userId);
+    await emitHoldings(userId);
+
+    const favInterval = setInterval(() => emitFavourites(userId), 20000);
+
+    const indicesInterval = setInterval(async () => {
+      try {
+        if (yahooFinance) {
+          const nifty = await yahooFinance.quote("^NSEI");
+          const sensex = await yahooFinance.quote("^BSESN");
+          io.to(userId).emit('indices', { nifty, sensex });
+        }
+      } catch (err) {
+        // silently fail
+      }
+    }, 200);
+
+
+    socket.on('newOrder', async (payload, callback) => {
+      try {
+        const userId = socket.userId;
+        const name = payload.name?.toUpperCase();
+        const qty = Number(payload.qty);
+        const price = Number(payload.price);
+        const change = payload.change;
+        const net = payload.net;
+        const inputMode = payload.mode?.toUpperCase();
+        if (!userId || !name || !qty || !price || !inputMode || !change || !net) {
+          return callback && callback({ error: 'Missing required fields for new order.' });
+        }
+        const now = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
+        const date = new Date(now);
+        const currentHour = date.getHours();
+        const currentMinute = date.getMinutes();
+        const isBeforeMarketOpen = currentHour < 9 || (currentHour === 9 && currentMinute < 15);
+        const isAfterMarketClose = currentHour > 15 || (currentHour === 15 && currentMinute >= 30);
+        const isOutsideMarketHours = isBeforeMarketOpen || isAfterMarketClose;
+        let orderMode = inputMode;
+        if (isOutsideMarketHours) {
+          if (inputMode === 'BUY') {
+            orderMode = 'PENDING_BUY';
+          } else if (inputMode === 'SELL') {
+            orderMode = 'PENDING_SELL';
+          }
+        } else {
+          if (inputMode === 'BUY') {
+            orderMode = 'BUY';
+          } else if (inputMode === 'SELL') {
+            orderMode = 'SELL';
+          }
+        }
+        const totalCost = qty * price;
+        
+        const user = await UsersModel.findById(userId);
+        if (!user) return callback && callback({ error: 'User not found.' });
+        
+        if ((orderMode === 'BUY' || orderMode === 'PENDING_BUY') && user.availableMargin < totalCost) {
+          return callback && callback({ error: 'Not enough available margin.' });
+        }
+        
+        const newOrder = new OrdersModel({ userId, name, qty, price, mode: orderMode, time: now });
+        await newOrder.save();
+        
+        if (orderMode === 'PENDING_BUY') {
+          await UsersModel.findByIdAndUpdate(userId, { $inc: { usedMargin: totalCost, availableMargin: -totalCost } });
+          await emitOrders(userId);
+          await emitHoldings(userId);
+          await emitFavourites(userId);
+          await emitWatchlist(userId);
+          return callback && callback({ message: 'Order marked as PENDING. Will execute next market day.', status: 'pending' });
+        }
+
+        const holding = await HoldingsModel.findOne({ userId, name });
+
+        if (orderMode === 'BUY') {
+          await UsersModel.findByIdAndUpdate(userId, { $inc: { availableMargin: -totalCost } });
+          if (holding) {
+            const totalQty = holding.qty + qty;
+            const newAvg = ((holding.avg * holding.qty) + (price * qty)) / totalQty;
+            holding.qty = totalQty;
+            holding.avg = newAvg;
+            holding.price = price;
+            holding.net = net;
+            holding.day = `${change}%`;
+            await holding.save();
+            await emitOrders(userId);
+            await emitHoldings(userId);
+            await emitFavourites(userId);
+            await emitWatchlist(userId);
+            return callback && callback({ message: 'Holding updated after buy.', status: 'success' });
+          } else {
+            const newHolding = new HoldingsModel({ userId, name, qty, avg: price, price, net, day: `${change}%` });
+            await newHolding.save();
+            await emitOrders(userId);
+            await emitHoldings(userId);
+            await emitFavourites(userId);
+            await emitWatchlist(userId);
+            return callback && callback({ message: 'New holding added.', status: 'success' });
+          }
+        }
+        if (orderMode === 'PENDING_SELL') {
+          if (!holding || holding.qty < qty) {
+            return callback && callback({ message: 'Not enough quantity to sell.', status: 'not' });
+          }
+          await emitOrders(userId);
+          await emitHoldings(userId);
+          await emitFavourites(userId);
+          await emitWatchlist(userId);
+          return callback && callback({ message: 'Order marked as PENDING. Will execute next market day.', status: 'pending' });
+        }
+        if (orderMode === 'SELL') {
+          if (!holding || holding.qty < qty) {
+            return callback && callback({ message: 'Not enough quantity to sell.', status: 'not' });
+          }
+          holding.qty -= qty;
+          holding.price = price;
+          await UsersModel.findByIdAndUpdate(userId, { $inc: { availableMargin: totalCost } });
+          if (holding.qty === 0) {
+            await HoldingsModel.deleteOne({ userId, name });
+            await emitOrders(userId);
+            await emitHoldings(userId);
+            await emitFavourites(userId);
+            await emitWatchlist(userId);
+            return callback && callback({ message: 'Holding sold completely and removed.', status: 'success' });
+          } else {
+            await holding.save();
+            await emitOrders(userId);
+            await emitHoldings(userId);
+            await emitFavourites(userId);
+            await emitWatchlist(userId);
+            return callback && callback({ message: 'Holding updated after sell.', status: 'success' });
+          }
+        }
+
+        return callback && callback({ error: 'Invalid order mode.' });
+      } catch (err) {
+        console.error('Error processing socket newOrder:', err);
+        return callback && callback({ error: 'Server error processing order.' });
+      }
+    });
+
+
+
+    socket.on('addFavourite', async (name, cb) => {
+      try {
+        const userId = socket.userId;
+        if (!name) return cb && cb({ error: 'Stock name is required' });
+        const user = await UsersModel.findByIdAndUpdate(userId, { $addToSet: { favourites: { symbol: name.toUpperCase() } } }, { new: true });
+        await emitFavourites(userId);
+        await emitWatchlist(userId);
+        return cb && cb({ message: 'Added to favourites' });
+      } catch (err) {
+        console.error('Error adding favourite via socket:', err);
+        return cb && cb({ error: 'Server error while adding favourite' });
+      }
+    });
+
+
+
+    socket.on('deleteFavourite', async (name, cb) => {
+      try {
+        const userId = socket.userId;
+        if (!name) return cb && cb({ error: 'Stock name is required' });
+        const user = await UsersModel.findByIdAndUpdate(userId, { $pull: { favourites: { symbol: name.toUpperCase() } } }, { new: true });
+        await emitFavourites(userId);
+        await emitWatchlist(userId);
+        return cb && cb({ message: 'Deleted from favourites' });
+      } catch (err) {
+        console.error('Error deleting favourite via socket:', err);
+        return cb && cb({ error: 'Server error while deleting favourite' });
+      }
+    });
+
+
+
+    socket.on('deleteOrder', async (orderId, cb) => {
+        try {
+          const userId = socket.userId;
+          if (!mongoose.Types.ObjectId.isValid(orderId)) {
+            return cb && cb({ error: 'Invalid order ID' });
+          }
+          const order = await OrdersModel.findOne({ _id: orderId, userId });
+          if (!order) {
+            return cb && cb({ error: 'Order not found or not authorized' });
+          }
+          if (order.mode === 'PENDING_BUY') {
+            const refundAmount = order.qty * order.price;
+            await UsersModel.findByIdAndUpdate(userId, { $inc: { usedMargin: -refundAmount, availableMargin: refundAmount } });
+          }
+          await OrdersModel.deleteOne({ _id: orderId });
+          await emitOrders(userId);
+          await emitHoldings(userId);
+          await emitFavourites(userId);
+          await emitWatchlist(userId);
+          return cb && cb({ message: 'Order deleted successfully' });
+        } catch (err) {
+          console.error('Error deleting order via socket:', err);
+          return cb && cb({ error: 'Internal Server Error' });
+        }
+      });
+
+
+    socket.on('disconnect', () => {
+      clearInterval(favInterval);
+      clearInterval(indicesInterval);
+      console.log('🔴 Socket disconnected for user', userId);
+    });
+  });
+
+  ioInstance = io;
+  return io;
+}
+
+function getIO() {
+  return ioInstance;
+}
+
+async function emitWatchlist(userId) {
+  if (!ioInstance) return;
+  const user = await UsersModel.findById(userId);
+  const fav = user?.favourites || [];
+  const favData = await Promise.all(
+    fav.map(async (el) => {
+      const symbol = el.symbol;
+      try {
+        const res = await axios.get(`https://stock.indianapi.in/stock?name=${symbol}`, {
+          headers: { "X-Api-Key": process.env.API_KEY },
+        });
+        const data = res.data;
+        const price = parseFloat(data?.currentPrice?.BSE);
+        const percentChange = parseFloat(data.percentChange);
+        const newPrice = price + (price * percentChange) / 100;
+        const netChange = Math.abs(newPrice) - price;
+        return {
+          ...el.toObject(),
+          curr: isNaN(price) ? null : +price.toFixed(2),
+          net: isNaN(netChange) ? null : +netChange.toFixed(2),
+          change: isNaN(percentChange) ? null : +percentChange.toFixed(2),
+        };
+      } catch (e) {
+        return { ...el.toObject(), curr: null, net: null, change: null };
+      }
+    })
+  );
+  ioInstance.to(userId).emit('watchlist', favData);
+}
+
+async function emitOrders(userId) {
+  if (!ioInstance) return;
+  const orders = await OrdersModel.find({ userId: new mongoose.Types.ObjectId(String(userId)) });
+  ioInstance.to(userId).emit('orders', orders);
+}
+
+async function emitFavourites(userId) {
+  if (!ioInstance) return;
+  const user = await UsersModel.findById(userId);
+  const fav = user?.favourites || [];
+  const favData = await Promise.all(
+    fav.map(async (el) => {
+      const symbol = el.symbol;
+      try {
+        const res = await axios.get(`https://stock.indianapi.in/stock?name=${symbol}`, {
+          headers: { "X-Api-Key": process.env.API_KEY },
+        });
+        const data = res.data;
+        const price = parseFloat(data?.currentPrice?.BSE);
+        const percentChange = parseFloat(data.percentChange);
+        const newPrice = price + (price * percentChange) / 100;
+        const netChange = Math.abs(newPrice) - price;
+        return {
+          ...el.toObject(),
+          curr: isNaN(price) ? null : +price.toFixed(2),
+          net: isNaN(netChange) ? null : +netChange.toFixed(2),
+          change: isNaN(percentChange) ? null : +percentChange.toFixed(2),
+        };
+      } catch (e) {
+        return { ...el.toObject(), curr: null, net: null, change: null };
+      }
+    })
+  );
+  ioInstance.to(userId).emit('watchlist', favData);
+}
+
+async function emitHoldings(userId) {
+  if (!ioInstance) return;
+  const holdings = await HoldingsModel.find({ userId: new mongoose.Types.ObjectId(String(userId)) });
+  ioInstance.to(userId).emit('holdings', holdings);
+}
+
+module.exports = { init, getIO, emitWatchlist, emitOrders, emitFavourites, emitHoldings };

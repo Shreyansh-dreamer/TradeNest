@@ -15,7 +15,9 @@ const cookieParser = require("cookie-parser");
 const verifyUser = require("./Middlewares/verifyUser");
 const fundsRoutes = require("./routes/fundRoutes");
 const apiRoutes = require("./routes/apiRoutes");
-const axios = require("axios");
+const axios = require('axios');
+const http = require('http');
+const { init: initSocket, emitOrders, emitWatchlist, emitFavourites } = require('./socket');
 
 const PORT = process.env.PORT || 3002;
 const uri = process.env.MONGO_URL;
@@ -166,280 +168,59 @@ app.get("/userData", verifyUser, async (req, res) => {
     }
 });
 
-app.get("/allHoldings", verifyUser, async (req, res) => {
-    const userId = req.userId;  //from verifyUser middleware
-    try {
-        const holdings = await HoldingsModel.find({ userId: new mongoose.Types.ObjectId(String(userId)) });
-        res.json(holdings);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Server error");
-    }
-});
-
 app.get("/allPositions", async (req, res) => {
     let allPositions = await PositionsModel.find({});
     res.json(allPositions);
 });
 
-app.post("/newOrder", verifyUser, async (req, res) => {
+app.delete("/deleteOrder/:id", verifyUser, async (req, res) => {
+    const userId = req.userId;
+    const orderId = req.params.id;
+
     try {
-        const userId = req.userId;
-        const name = req.body.name?.toUpperCase();
-        const qty = Number(req.body.qty);
-        const price = Number(req.body.price);
-        const change = req.body.change;
-        const net = req.body.net;
-        const inputMode = req.body.mode?.toUpperCase();
-
-        if (!userId || !name || !qty || !price || !inputMode || !change || !net) {
-            return res.status(400).send("Missing required fields for new order.");
+        if (!mongoose.Types.ObjectId.isValid(orderId)) {
+            return res.status(400).json({ error: "Invalid order ID" });
         }
 
-        const now = new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
-        const date = new Date(now);
-        const currentHour = date.getHours();
-        const currentMinute = date.getMinutes();
-        const isBeforeMarketOpen = currentHour < 9 || (currentHour === 9 && currentMinute < 15);
-        const isAfterMarketClose = currentHour > 15 || (currentHour === 15 && currentMinute >= 30);
-
-        const isOutsideMarketHours = isBeforeMarketOpen || isAfterMarketClose;
-
-        let orderMode = inputMode;
-
-        if (isOutsideMarketHours) {
-            if (inputMode === "BUY") {
-                orderMode = "PENDING_BUY";
-            } else if (inputMode === "SELL") {
-                orderMode = "PENDING_SELL";
-            }
-        }
-        else {
-            if (inputMode === "BUY") {
-                orderMode = "BUY";
-            } else if (inputMode === "SELL") {
-                orderMode = "SELL";
-            }
+        const order = await OrdersModel.findOne({ _id: orderId, userId });
+        if (!order) {
+            return res.status(404).json({ error: "Order not found or not authorized" });
         }
 
-        const totalCost = qty * price;
-        console.log("orderMode decided:", orderMode);
-
-        const user = await UsersModel.findById(userId);
-        if (!user) return res.status(404).send("User not found.");
-
-        // Check margin only for BUY or PENDING
-        if ((orderMode === "BUY" || orderMode === "PENDING_BUY") && user.availableMargin < totalCost) {
-            return res.status(400).send("Not enough available margin.");
-        }
-
-        // Create order record
-        const newOrder = new OrdersModel({
-            userId,
-            name,
-            qty,
-            price,
-            mode: orderMode,
-            time: now,
-        });
-        await newOrder.save();
-
-        // Handle PENDING
-        if (orderMode === "PENDING_BUY") {
+        if (order.mode === "PENDING_BUY") {
+            const refundAmount = order.qty * order.price;
             await UsersModel.findByIdAndUpdate(userId, {
                 $inc: {
-                    usedMargin: totalCost,
-                    availableMargin: -totalCost,
+                    usedMargin: -refundAmount,
+                    availableMargin: refundAmount,
                 },
             });
-            return res.status(200).json({
-                message: "Order marked as PENDING. Will execute next market day.",
-                status: "pending",
-            });
         }
 
-        const holding = await HoldingsModel.findOne({
-            userId,
-            name,
+        await OrdersModel.deleteOne({ _id: orderId });
+
+        return res.status(200).json({ message: "Order deleted successfully" });
+    } catch (err) {
+        console.error("Error deleting order:", err);
+        return res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+
+app.post("/logout", verifyUser, (req, res) => {
+    try {
+        res.clearCookie("token", {
+            httpOnly: true,
+            secure: false,
+            sameSite: "Lax",
         });
-
-
-        // Handle BUY
-        if (orderMode === "BUY") {
-            await UsersModel.findByIdAndUpdate(userId, {
-                $inc: { availableMargin: -totalCost },
-            });
-
-            if (holding) {
-                const totalQty = holding.qty + qty;
-                const newAvg = ((holding.avg * holding.qty) + (price * qty)) / totalQty;
-
-                holding.qty = totalQty;
-                holding.avg = newAvg;
-                holding.price = price;
-                holding.net = net;
-                holding.day = `${change}%`;
-                await holding.save();
-
-                return res.status(200).json({ message: "Holding updated after buy.", status: "success" });
-            } else {
-                const newHolding = new HoldingsModel({
-                    userId,
-                    name,
-                    qty,
-                    avg: price,
-                    price,
-                    net,
-                    day: `${change}%`,
-                });
-                await newHolding.save();
-
-                return res.status(200).json({ message: "New holding added.", status: "success" });
-            }
-        }
-
-        if (orderMode === "PENDING_SELL") {
-            if (!holding || holding.qty < qty) {
-                return res.status(400).json({
-                    message: "Not enough quantity to sell.",
-                    status: "not",
-                });
-            }
-            return res.status(200).json({
-                message: "Order marked as PENDING. Will execute next market day.",
-                status: "pending",
-            });
-        }
-
-        // Handle SELL
-        if (orderMode === "SELL") {
-            if (!holding || holding.qty < qty) {
-                return res.status(400).json({
-                    message: "Not enough quantity to sell.",
-                    status: "not",
-                });
-            }
-
-            holding.qty -= qty;
-            holding.price = price;
-
-            await UsersModel.findByIdAndUpdate(userId, {
-                $inc: { availableMargin: totalCost },
-            });
-
-            if (holding.qty === 0) {
-                await HoldingsModel.deleteOne({ userId, name });
-                return res.status(200).json({ message: "Holding sold completely and removed.", status: "success" });
-            } else {
-                await holding.save();
-                return res.status(200).json({ message: "Holding updated after sell.", status: "success" });
-            }
-        }
-
-        return res.status(400).send("Invalid order mode.");
-
+        res.status(200).json({ message: 'Logged out', status: 'logout' });
     } catch (err) {
-        console.error("Error processing new order:", err);
-        res.status(500).send("Server error processing order.");
+        res.status(500).json({ message: "Logout failed", error: err.message });
     }
 });
 
-app.get("/allOrders", verifyUser, async (req, res) => {
-    const userId = req.userId;
-    if (!userId) return res.status(400).send("Missing userId");
-
-    try {
-        const orders = await OrdersModel.find({ userId: new mongoose.Types.ObjectId(String(userId)) });
-        res.json(orders);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Server error");
-    }
-});
-
-app.delete("/deleteOrder/:id", verifyUser, async (req, res) => {
-  const userId = req.userId;
-  const orderId = req.params.id;
-
-  try {
-    if (!mongoose.Types.ObjectId.isValid(orderId)) {
-      return res.status(400).json({ error: "Invalid order ID" });
-    }
-
-    const order = await OrdersModel.findOne({ _id: orderId, userId });
-    if (!order) {
-      return res.status(404).json({ error: "Order not found or not authorized" });
-    }
-
-    if (order.mode === "PENDING_BUY") {
-      const refundAmount = order.qty * order.price;
-      await UsersModel.findByIdAndUpdate(userId, {
-        $inc: {
-          usedMargin: -refundAmount,
-          availableMargin: refundAmount,
-        },
-      });
-    }
-
-    await OrdersModel.deleteOne({ _id: orderId });
-
-    return res.status(200).json({ message: "Order deleted successfully" });
-  } catch (err) {
-    console.error("Error deleting order:", err);
-    return res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
-
-app.post("/addFavourites", verifyUser, async (req, res) => {
-    const { name } = req.body;
-    const userId = req.userId;
-    if (!name) return res.status(400).send("Stock name is required");
-    try {
-        const user = await UsersModel.findByIdAndUpdate(
-            userId,
-            {
-                $addToSet: {
-                    favourites: { symbol: name.toUpperCase() }
-                }
-            },
-            { new: true }
-        );
-        if (!user) {
-            return res.status(404).send("User not found");
-        }
-        res.status(200).send("Added to favourites");
-    } catch (err) {
-        console.error("Server error while adding favourite:", err);
-        res.status(500).send("Server error while adding favourite");
-    }
-});
-
-app.post("/deleteFavourites", verifyUser, async (req, res) => {
-    const { name } = req.body;
-    const userId = req.userId;
-    if (!name) return res.status(400).send("Stock name is required");
-    try {
-        const user = await UsersModel.findByIdAndUpdate(
-            userId,
-            {
-                $pull: {
-                    favourites: { symbol: name.toUpperCase() }
-                }
-            },
-            { new: true }
-        );
-        if (!user) {
-            return res.status(404).send("User not found");
-        }
-        res.status(200).send("Deleted from favourites");
-    } catch (err) {
-        console.error("Server error while deleting favourite:", err);
-        res.status(500).send("Server error while deleting favourite");
-    }
-});
-
-app.post("/logout",verifyUser, (req, res) => {
+app.post("/logout", verifyUser, (req, res) => {
     try {
         res.clearCookie("token", {
             httpOnly: true,
@@ -453,10 +234,13 @@ app.post("/logout",verifyUser, (req, res) => {
 });
 
 
-app.listen(PORT, () => {
-    console.log("App is listening to port 3002");
-    mongoose.connect(uri);
-    console.log("Database also connected");
+const server = http.createServer(app);
+initSocket(server);
+server.listen(PORT, () => {
+    console.log(`App is listening to port ${PORT}`);
+    mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true }).then(() => {
+        console.log('Database also connected');
+    }).catch(err => console.error('Mongo connection error:', err));
 });
 
 require("./cron/schedulePendingBuyOrders");

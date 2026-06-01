@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { emitSocket, getLastHoldings, onSocket } from '../socket';
 
 const SellActionWindow = ({ stock, onClose }) => {
     const [stockQuantity, setStockQuantity] = useState(1);
@@ -13,17 +14,14 @@ const SellActionWindow = ({ stock, onClose }) => {
     }, [stock]);
 
     useEffect(() => {
-        axios
-            .get("http://localhost:3002/allHoldings", { withCredentials: true })
-            .then((res) => {
-                const holdings = Array.isArray(res.data) ? res.data : [];
-                const current = holdings.find(h => h.name === stock?.symbol);
-                setAvailableQuantity(current?.qty || 0);
-            })
-            .catch((err) => {
-                console.error("Error fetching holdings:", err);
-                setAvailableQuantity(0);
-            });
+        const current = getLastHoldings() || [];
+        const found = current.find(h => h.name === stock?.symbol);
+        setAvailableQuantity(found?.qty || 0);
+        const off = onSocket('holdings', (data) => {
+            const found2 = (data || []).find(h => h.name === stock?.symbol);
+            setAvailableQuantity(found2?.qty || 0);
+        });
+        return () => off();
     }, [stock?.name]);
 
     const handleSellClick = async () => {
@@ -33,20 +31,19 @@ const SellActionWindow = ({ stock, onClose }) => {
         }
 
         try {
-            await axios.post(
-                "http://localhost:3002/newOrder",
-                {
-                    name: stock.symbol,
-                    qty: Number(stockQuantity),
-                    price: Number(stockPrice),
-                    change: Number(stock.change),
-                    net: Number(stock.net),
-                    mode: "SELL",
-                },
-                { withCredentials: true }
-            );
-            onClose();
-            window.location.reload();
+            emitSocket('newOrder', {
+                name: stock.symbol,
+                qty: Number(stockQuantity),
+                price: Number(stockPrice),
+                change: Number(stock.change),
+                net: Number(stock.net),
+                mode: 'SELL'
+            }, (res) => {
+                if (res?.error) {
+                    alert(res.error);
+                }
+                onClose();
+            });
         } catch (error) {
             console.error("Error placing sell order:", error.response?.data || error.message);
             alert(`Failed to place sell order: ${error.response?.data || error.message}`);

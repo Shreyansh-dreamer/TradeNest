@@ -6,6 +6,7 @@ import { Tooltip } from '@mui/material';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import AddIcon from '@mui/icons-material/Add';
 import axios from 'axios';
+import { emitSocket, onSocket, getLastWatchlist } from '../socket';
 import { DoughnutChart } from './DoughnutChart';
 import BuyActionWindow from './BuyActionWindow';
 import SellActionWindow from './SellActionWindow';
@@ -13,7 +14,7 @@ import SellActionWindow from './SellActionWindow';
 const Watchlist = () => {
   const [activeId, setActiveId] = useState(null);
   const [hoverId, setHoverId] = useState(null);
-  const [mobileActiveId, setMobileActiveId] = useState(null); // toggle ID for showing buttons
+  const [mobileActiveId, setMobileActiveId] = useState(null); 
   const [searchValue, setSearchValue] = useState('');
   const [searchData, setSearchData] = useState([]);
   const [searchVisible, setSearchVisible] = useState(true);
@@ -26,7 +27,6 @@ const Watchlist = () => {
 
   const dropdownRef = useRef(null);
 
-  // Toggle action buttons on click for all screens (removed screen size check)
   const handleToggleMobileActive = (i) => {
     setMobileActiveId((prev) => (prev === i ? null : i));
   };
@@ -54,36 +54,22 @@ const Watchlist = () => {
   };
 
   const fetchWatchlist = async () => {
-    try {
-      setWatchlistLoading(true);
-      const res = await axios.get('http://localhost:3002/watchListData', {
-        withCredentials: true,
-      });
-      setWatchlistData(res.data.response || []);
-    } catch (err) {
-      if (err.response?.status === 400) setWatchlistError('Empty watchlist.');
-    } finally {
-      setWatchlistLoading(false);
-    }
+    setWatchlistLoading(true);
+    setWatchlistData(getLastWatchlist() || []);
+    setWatchlistLoading(false);
   };
 
   const handleAdd = async (symbol) => {
-    await axios.post(
-      'http://localhost:3002/addFavourites',
-      { name: symbol },
-      { withCredentials: true }
-    );
-    fetchWatchlist();
-    setSearchData([]);
+    emitSocket('addFavourite', symbol, (res) => {
+      if (res?.error) console.error(res.error);
+      setSearchData([]);
+    });
   };
 
   const handleDelete = async (symbol) => {
-    await axios.post(
-      'http://localhost:3002/deleteFavourites',
-      { name: symbol },
-      { withCredentials: true }
-    );
-    fetchWatchlist();
+    emitSocket('deleteFavourite', symbol, (res) => {
+      if (res?.error) console.error(res.error);
+    });
   };
 
   const handleTrade = (role, stock) => setActiveTrade({ role, stock });
@@ -91,27 +77,28 @@ const Watchlist = () => {
 
   useEffect(() => {
     fetchWatchlist();
+    const off = onSocket('watchlist', (data) => setWatchlistData(data || []));
 
-    // Close dropdown and mobile toggles on outside click
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setSearchVisible(false);
         setSearchError('');
       }
-      // Close mobileActiveId if clicking outside watchlist items
       if (!event.target.closest('.watchlist-item')) {
         setMobileActiveId(null);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      off();
+    };
   }, []);
 
   return (
     <>
       <div className="flex flex-col p-4 text-[#424242] border border-black/10 h-screen max-w-full overflow-y-auto">
-        {/* Search input and results dropdown */}
         <div
           className={`flex justify-between border border-black/10 shadow p-2 relative ${searchLoading ? 'bg-black/2' : ''
             }`}

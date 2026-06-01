@@ -1,28 +1,20 @@
 import React, { useEffect, useState } from "react";
 import Menu from "./Menu";
 import axios from "axios";
+import { onSocket, getLastIndices } from '../socket';
 
 const TopBar = () => {
   const [indices, setIndices] = useState({ nifty: null, sensex: null });
 
   useEffect(() => {
-    const fetchIndices = async () => {
-      try {
-        const res = await axios.get("http://localhost:3002/niftySensex", {
-          withCredentials: true,
-        });
-        setIndices({
-          nifty: res.data.nifty?.regularMarketPrice || null,
-          sensex: res.data.sensex?.regularMarketPrice || null,
-        });
-      } catch (err) {
-        console.error("Failed to fetch indices", err);
-      }
-    };
-
-    fetchIndices();
-    const interval = setInterval(fetchIndices, 500);
-    return () => clearInterval(interval);
+    const current = getLastIndices();
+    if (current) {
+      setIndices({ nifty: current.nifty?.regularMarketPrice || null, sensex: current.sensex?.regularMarketPrice || null });
+    }
+    const off = onSocket('indices', (data) => {
+      setIndices({ nifty: data.nifty?.regularMarketPrice || null, sensex: data.sensex?.regularMarketPrice || null });
+    });
+    return () => off();
   }, []);
 
   return (

@@ -7,25 +7,18 @@ import Positions from "./Positions";
 import Summary from "./Summary";
 import WatchList from "./WatchList";
 import axios from "axios";
+import { onSocket, getLastHoldings } from '../socket';
+import Predict from "./Predict";
 
 const Dashboard = () => {
   const [allHoldings, setAllHoldings] = useState([]);
   const [showSidebar, setShowSidebar] = useState(false);
 
   useEffect(() => {
-  const fetchHoldings = () => {
-    axios.get("http://localhost:3002/allHoldings", { withCredentials: true })
-      .then(res => setAllHoldings(res.data))
-      .catch(err => console.error(err));
-  };
-
-  fetchHoldings();
-
-  const interval = setInterval(() => {
-    fetchHoldings();
-  }, 300000); 
-
-  return () => clearInterval(interval); 
+  // initialize from last-known socket data
+  setAllHoldings(getLastHoldings());
+  const off = onSocket('holdings', (data) => setAllHoldings(data || []));
+  return () => off();
 }, []);
 
   const isSmallScreen = window.innerWidth < 768;
@@ -58,6 +51,7 @@ const Dashboard = () => {
           <Route path="/holdings" element={<Holdings allHoldings={allHoldings} />} />
           <Route path="/positions" element={<Positions />} />
           <Route path="/funds" element={<Funds />} />
+          <Route path="/predict" element={<Predict />} />
         </Routes>
       </div>
     </div>

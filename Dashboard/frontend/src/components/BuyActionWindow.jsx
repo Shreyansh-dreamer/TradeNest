@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { emitSocket } from '../socket';
 
 const BuyActionWindow = ({ stock, onClose }) => {
     const [stockQuantity, setStockQuantity] = useState(1);
@@ -30,20 +31,19 @@ const BuyActionWindow = ({ stock, onClose }) => {
             return;
         }
         try {
-            await axios.post(
-                "http://localhost:3002/newOrder",
-                {
+                emitSocket('newOrder', {
                     name: stock.symbol,
                     qty: Number(stockQuantity),
                     price: Number(stockPrice),
                     change: Number(stock.change),
                     net: Number(stock.net),
-                    mode: "BUY",
-                },
-                { withCredentials: true }
-            );
-            onClose();
-            window.location.reload();
+                    mode: 'BUY'
+                }, (res) => {
+                    if (res?.error) {
+                        alert(res.error);
+                    }
+                    onClose();
+                });
         } catch (error) {
             console.error("Error placing buy order:", error.response ? error.response.data : error.message);
             alert(`Failed to place buy order: ${error.response ? error.response.data : error.message}`);

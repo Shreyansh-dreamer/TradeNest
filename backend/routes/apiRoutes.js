@@ -3,21 +3,7 @@ const router = express.Router();
 const { UsersModel } = require('../model/UsersModel');
 const verifyUser = require("../Middlewares/verifyUser");
 const axios = require("axios");
-const yahooFinance = require("yahoo-finance2").default;
 
-router.get('/niftySensex', async (req, res) => {
-  try {
-    const nifty = await yahooFinance.quote("^NSEI");
-    const sensex = await yahooFinance.quote("^BSESN");
-
-    res.json({
-      nifty,
-      sensex
-    });
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch index data" });
-  }
-});
 
 router.post("/get-stocks", async (req, res) => {
   let { data } = req.body;
@@ -44,60 +30,46 @@ router.post("/get-stocks", async (req, res) => {
   }
 })
 
-router.get("/watchlistData", verifyUser, async (req, res) => {
-  try {
-    const userId = req.userId;
-    const userData = await UsersModel.findById(userId);
-    const fav = userData.favourites;
 
-    const favData = await Promise.all(
-      fav.map(async (el) => {
-        const symbol = el.symbol;
 
-        try {
-          const stockRes = await axios.get(`https://stock.indianapi.in/stock?name=${symbol}`, {
-            headers: {
-              "X-Api-Key": process.env.API_KEY,
-            },
-          });
+const { spawn } = require('child_process');
+const path = require('path');
 
-          const data = stockRes.data;
+router.get("/predict/:symbol", verifyUser, async (req, res) => {
+  const symbol = req.params.symbol;
+  if (!symbol) return res.status(400).json({ success: false, error: "Symbol is required" });
 
-          const price = parseFloat(data?.currentPrice?.BSE);
-          if (isNaN(price)) {
-            console.warn(`Invalid data for ${symbol}`, { price });
-            return {
-              ...el.toObject(),
-              curr: null,
-              net: null,
-              change: null,
-            };
-          }
-          const percentChange = parseFloat(data.percentChange);
-          const newPrice = parseFloat(price + (price*percentChange / 100));
-          const netChange = Math.abs(newPrice) - price;
-          return {
-            ...el.toObject(),
-            curr: +price.toFixed(2),
-            net: +netChange.toFixed(2),
-            change: +percentChange.toFixed(2),
-          };
-        } catch (err) {
-          console.error(`API fetch error for ${symbol}:`, err.message);
-          return {
-            ...el.toObject(),
-            curr: null,
-            net: null,
-            change: null,
-          };
+  const scriptPath = path.join(__dirname, "../utils/predict.py");
+  
+  const runPython = (cmd) => {
+    return new Promise((resolve, reject) => {
+      const child = spawn(cmd, [scriptPath, symbol]);
+      let stdout = "";
+      let stderr = "";
+      child.stdout.on("data", (data) => { stdout += data.toString(); });
+      child.stderr.on("data", (data) => { stderr += data.toString(); });
+      child.on("close", (code) => {
+        if (code !== 0) {
+          reject(new Error(stderr || `Python process exited with code ${code}`));
+        } else {
+          resolve(stdout);
         }
-      })
-    );
+      });
+    });
+  };
 
-    return res.status(200).json({ response: favData });
+  try {
+    try {
+      const result = await runPython("python3");
+      return res.status(200).json(JSON.parse(result));
+    } catch (err) {
+      console.log("python3 failed, trying python...", err.message);
+      const result = await runPython("python");
+      return res.status(200).json(JSON.parse(result));
+    }
   } catch (err) {
-    console.error("Server error:", err.message);
-    return res.status(500).json({ success: false, message: "Internal Server Error" });
+    console.error("Prediction failed:", err);
+    return res.status(500).json({ success: false, error: err.message || "Failed to run prediction model" });
   }
 });
 
