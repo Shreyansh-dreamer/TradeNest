@@ -1,69 +1,74 @@
 const express = require('express');
 const router = express.Router();
-const { UsersModel } = require('../model/UsersModel');
+const { pool } = require('../db/pool');
 const verifyUser = require("../Middlewares/verifyUser");
 
 router.post("/addFunds", verifyUser, async (req, res) => {
   const { amount } = req.body;
   const userId = req.userId;
-  if (!amount || amount <= 0) {
-    return res.status(400).json({ message: "Invalid amount" });
-  }
+  if (!amount || amount <= 0) return res.status(400).json({ message: "Invalid amount" });
+  const client = await pool.connect();
   try {
-    const user = await UsersModel.findById(userId);
+    await client.query('BEGIN');
+    const userRes = await client.query('SELECT * FROM users WHERE id=$1 FOR UPDATE', [userId]);
+    const user = userRes.rows[0];
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      await client.query('ROLLBACK');
+      return res.status(404).json({ message: 'User not found' });
     }
-    const update = {
-      $inc: {
-        payin: amount,
-        availableMargin: amount,
-      },
-    };
-    if (user.openingBalance === 0) {
-      update.$set = { openingBalance: amount };
-    }
-    const updatedUser = await UsersModel.findByIdAndUpdate(userId, update, { new: true });
+    const newPayin = (Number(user.payin) || 0) + Number(amount);
+    const newAvailable = (Number(user.available_margin) || 0) + Number(amount);
+    const newOpening = (user.opening_balance === 0 || user.opening_balance === null) ? Number(amount) : user.opening_balance;
+    const upd = await client.query(
+      'UPDATE users SET payin=$1, available_margin=$2, opening_balance=$3 WHERE id=$4 RETURNING *',
+      [newPayin, newAvailable, newOpening, userId]
+    );
+    await client.query('COMMIT');
+    const updatedUser = upd.rows[0];
     res.status(200).json({
       message: `Successfully added ₹${amount} to your account.`,
-      availableMargin: updatedUser.availableMargin,
+      availableMargin: updatedUser.available_margin,
       payin: updatedUser.payin,
-      openingBalance: updatedUser.openingBalance,
+      openingBalance: updatedUser.opening_balance,
     });
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: 'Server error' });
+  } finally {
+    client.release();
   }
 });
 
 router.post("/withdrawFunds", verifyUser, async (req, res) => {
   const { amount } = req.body;
   const userId = req.userId;
-  if (!amount || amount <= 0) {
-    return res.status(400).json({ message: "Invalid amount" });
-  }
+  if (!amount || amount <= 0) return res.status(400).json({ message: 'Invalid amount' });
+  const client = await pool.connect();
   try {
-    const user = await UsersModel.findByIdAndUpdate(
-      userId,
-      {
-        $inc: {
-          availableMargin: -amount,
-        },
-      },
-      { new: true }
-    );
+    await client.query('BEGIN');
+    const userRes = await client.query('SELECT * FROM users WHERE id=$1 FOR UPDATE', [userId]);
+    const user = userRes.rows[0];
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      await client.query('ROLLBACK');
+      return res.status(404).json({ message: 'User not found' });
     }
+    const newAvailable = (Number(user.available_margin) || 0) - Number(amount);
+    const upd = await client.query('UPDATE users SET available_margin=$1 WHERE id=$2 RETURNING *', [newAvailable, userId]);
+    await client.query('COMMIT');
+    const updatedUser = upd.rows[0];
     res.status(200).json({
       message: `Successfully withdrawn ₹${amount} from your account.`,
-      availableMargin: user.availableMargin,
-      payin: user.payin,
-      openingBalance: user.openingBalance,
+      availableMargin: updatedUser.available_margin,
+      payin: updatedUser.payin,
+      openingBalance: updatedUser.opening_balance,
     });
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: 'Server error' });
+  } finally {
+    client.release();
   }
 });
 

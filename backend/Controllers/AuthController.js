@@ -1,4 +1,4 @@
-const { UsersModel: User } = require("../model/UsersModel");
+const { pool } = require("../db/pool");
 const { createSecretToken } = require("../utils/SecretToken");
 const bcrypt = require("bcryptjs");
 const jwt = require('jsonwebtoken');
@@ -11,8 +11,12 @@ module.exports.Signup = async (req, res, next) => {
   try {
     const {username, password, createdAt } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await User.create({ email, password : hashedPassword, username, createdAt });
-    const token = createSecretToken(user._id);
+    const insert = await pool.query(
+      'INSERT INTO users(username, email, password, last_logged_in) VALUES($1,$2,$3,$4) RETURNING *',
+      [username, email, hashedPassword, createdAt || new Date()]
+    );
+    const user = insert.rows[0];
+    const token = createSecretToken(user.id);
     res.cookie("token", token, {
       httpOnly: true,
       secure: false,
@@ -42,12 +46,12 @@ module.exports.Login = async (req, res, next) => {
     if(!email || !password ){
       return res.json({message:'All fields are required'})
     }
-    const user = await User.findOne({ email });
-    const auth = await bcrypt.compare(password,user.password)
-    if (!auth) {
-      return res.status(401).json({ message: "Invalid email or password" }); 
-    }
-    const token = createSecretToken(user._id);
+    const userRes = await pool.query('SELECT * FROM users WHERE email=$1 LIMIT 1', [email]);
+    const user = userRes.rows[0];
+    if (!user) return res.status(401).json({ message: 'Invalid email or password' });
+    const auth = await bcrypt.compare(password, user.password);
+    if (!auth) return res.status(401).json({ message: 'Invalid email or password' });
+    const token = createSecretToken(user.id);
     res.cookie("token", token, {
       httpOnly: true,
       secure: false,
@@ -79,16 +83,13 @@ module.exports.resetPassword = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    const user = await User.findOneAndUpdate(
-      { email },
-      { $set: { password: hashedPassword } },
-      { new: true }
-    );
+    const upd = await pool.query('UPDATE users SET password=$1 WHERE email=$2 RETURNING *', [hashedPassword, email]);
+    const user = upd.rows[0];
 
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
-    const token = createSecretToken(user._id);
+    const token = createSecretToken(user.id);
     res.cookie("token", token, {
       httpOnly: true,
       secure: false,

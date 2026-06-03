@@ -1,14 +1,9 @@
 require('dotenv').config();
 const express = require("express");
-const mongoose = require("mongoose");
+const { pool } = require('./db/pool');
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const authRoutes = require('./routes/authRoutes');
-const { UsersModel } = require("./model/UsersModel");
-const { HoldingsModel } = require("./model/HoldingsModel");
-const { PositionsModel } = require('./model/PositionsModel');
-const { OrdersModel } = require("./model/OrdersModel");
-const jwt = require("jsonwebtoken");
 const passport = require("./config/passport")
 const bcrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
@@ -17,10 +12,9 @@ const fundsRoutes = require("./routes/fundRoutes");
 const apiRoutes = require("./routes/apiRoutes");
 const axios = require('axios');
 const http = require('http');
-const { init: initSocket, emitOrders, emitWatchlist, emitFavourites } = require('./socket');
+const { init: initSocket } = require('./socket');
 
 const PORT = process.env.PORT || 3002;
-const uri = process.env.MONGO_URL;
 
 const app = express();
 
@@ -46,122 +40,77 @@ app.get("/verifyUser", verifyUser, (req, res) => {
     res.status(200).json({ status: true, userId: req.userId });
 });
 
-// app.get('/addUsers', async (req, res) => {
-//     let tempUsers = [
-//         {
-//             username: "user",
-//             email: "user@gmail.com",
-//             password: "user@1234",
-//             lastLoggedIn: Date.now(),
-//             availableMargin:0,
-//             payin: 0,
-//             openingBalance: 0,
-//             usedMargin: 0,
-//             favourites: [],
-//         }
-//     ]
-//     tempUsers.forEach((item) => {
-//         let newUser = new UsersModel({
-//             username:item.username,
-//             email:item.email,
-//             password:item.password,
-//             lastLoggedIn:item.lastLoggedIn,
-//             availableMargin:item.availableMargin,
-//             payin:item.payin,
-//             openingBalance:item.openingBalance,
-//             usedMargin: item.usedMargin,
-//             favourites: item.favourites,
-//         });
+async function initDb() {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query(`CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      username TEXT UNIQUE,
+      email TEXT UNIQUE,
+      password TEXT,
+      last_logged_in TIMESTAMPTZ,
+      available_margin NUMERIC DEFAULT 0,
+      payin NUMERIC DEFAULT 0,
+      opening_balance NUMERIC DEFAULT 0,
+      used_margin NUMERIC DEFAULT 0,
+      favourites JSONB DEFAULT '[]'::jsonb
+    )`);
 
-//         newUser.save();
-//     });
-//     res.send("User dummy data initialised");
-// })
+    await client.query(`CREATE TABLE IF NOT EXISTS holdings (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT,
+      qty INTEGER,
+      avg NUMERIC,
+      price NUMERIC,
+      net TEXT,
+      day TEXT
+    )`);
 
-// app.get('/addPositions', async (req, res) => {
-//     let tempPositions = [
-//         {
-//             product: "CNC",
-//             name: "EVEREADY",
-//             qty: 2,
-//             avg: 316.27,
-//             price: 312.35,
-//             net: "+0.58%",
-//             day: "-1.24%",
-//             isLoss: true,
-//         },
-//         {
-//             product: "CNC",
-//             name: "JUBLFOOD",
-//             qty: 1,
-//             avg: 3124.75,
-//             price: 3082.65,
-//             net: "+10.04%",
-//             day: "-1.35%",
-//             isLoss: true,
-//         },
-//     ];
-//     tempPositions.forEach((item)=>{
-//         let newPosition = new PositionsModel({
-//             product: item.product,
-//             name: item.name,
-//             qty: item.qty,
-//             avg: item.avg,
-//             price: item.price,
-//             net: item.net,
-//             day: item.day,
-//             isLoss:item.isLoss,
-//         });
+    await client.query(`CREATE TABLE IF NOT EXISTS orders (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT,
+      qty INTEGER,
+      price NUMERIC,
+      mode TEXT,
+      time TIMESTAMPTZ
+    )`);
 
-//         newPosition.save();
-//     });
-//     res.send("Position dummy data initialised");
-// })
+    await client.query(`CREATE TABLE IF NOT EXISTS positions (
+      id SERIAL PRIMARY KEY,
+      product TEXT,
+      name TEXT,
+      qty INTEGER,
+      avg NUMERIC,
+      price NUMERIC,
+      net TEXT,
+      day TEXT,
+      is_loss BOOLEAN
+    )`);
 
-// app.get('/addHoldings', async (req, res) => {
-//     let tempHoldings = [
-//         {
-//             userId: "683ea6bdb1461e6c4fa3b2a8",
-//             name: "BHARTIARTL",
-//             qty: 2,
-//             avg: 538.05,
-//             price: 541.15,
-//             net: "+0.58%",
-//             day: "+2.99%",
-//         },
-//         {
-//             userId: "683ea6bdb1461e6c4fa3b2a8",
-//             name: "HDFCBANK",
-//             qty: 2,
-//             avg: 1383.4,
-//             price: 1522.35,
-//             net: "+10.04%",
-//             day: "+0.11%",
-//         },
-//     ]
-//     tempHoldings.forEach(
-//         (item) => {
-//             let newHolding = new HoldingsModel({
-//                 userId:new mongoose.Types.ObjectId(item.userId),
-//                 name: item.name,
-//                 qty: item.qty,
-//                 avg: item.avg,
-//                 price: item.price,
-//                 net: item.net,
-//                 day: item.day,
-//             });
+    // ensure a default user exists
+    const userCheck = await client.query('SELECT id FROM users WHERE email=$1 LIMIT 1', ['user@gmail.com']);
+    if (!userCheck.rows[0]) {
+      const hashed = await bcrypt.hash('user@1234', 10);
+      await client.query('INSERT INTO users(username,email,password,last_logged_in) VALUES($1,$2,$3,$4)', ['user','user@gmail.com',hashed,new Date()]);
+    }
 
-//             newHolding.save();
-//         }
-//     );
-//     res.send("Initial data saved");
-// })
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
 
 app.get("/userData", verifyUser, async (req, res) => {
     const userId = req.userId;
     try {
-        const userData = await UsersModel.findById(userId);
-        res.json(userData);
+        const userRes = await pool.query('SELECT * FROM users WHERE id=$1 LIMIT 1', [userId]);
+        res.json(userRes.rows[0] || null);
     } catch (err) {
         console.error(err);
         res.status(500).send("Server error");
@@ -169,56 +118,44 @@ app.get("/userData", verifyUser, async (req, res) => {
 });
 
 app.get("/allPositions", async (req, res) => {
-    let allPositions = await PositionsModel.find({});
-    res.json(allPositions);
+    try {
+        const posRes = await pool.query('SELECT * FROM positions');
+        res.json(posRes.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server error');
+    }
 });
 
 app.delete("/deleteOrder/:id", verifyUser, async (req, res) => {
     const userId = req.userId;
-    const orderId = req.params.id;
-
+    const orderId = parseInt(req.params.id, 10);
+    if (isNaN(orderId)) return res.status(400).json({ error: 'Invalid order ID' });
+    const client = await pool.connect();
     try {
-        if (!mongoose.Types.ObjectId.isValid(orderId)) {
-            return res.status(400).json({ error: "Invalid order ID" });
+        await client.query('BEGIN');
+        const orderRes = await client.query('SELECT * FROM orders WHERE id=$1 FOR UPDATE', [orderId]);
+        const order = orderRes.rows[0];
+        if (!order || Number(order.user_id) !== Number(userId)) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Order not found or not authorized' });
         }
-
-        const order = await OrdersModel.findOne({ _id: orderId, userId });
-        if (!order) {
-            return res.status(404).json({ error: "Order not found or not authorized" });
+        if (order.mode === 'PENDING_BUY') {
+            const refundAmount = Number(order.qty) * Number(order.price);
+            await client.query('UPDATE users SET used_margin = COALESCE(used_margin,0) - $1, available_margin = COALESCE(available_margin,0) + $1 WHERE id=$2', [refundAmount, userId]);
         }
-
-        if (order.mode === "PENDING_BUY") {
-            const refundAmount = order.qty * order.price;
-            await UsersModel.findByIdAndUpdate(userId, {
-                $inc: {
-                    usedMargin: -refundAmount,
-                    availableMargin: refundAmount,
-                },
-            });
-        }
-
-        await OrdersModel.deleteOne({ _id: orderId });
-
-        return res.status(200).json({ message: "Order deleted successfully" });
+        await client.query('DELETE FROM orders WHERE id=$1', [orderId]);
+        await client.query('COMMIT');
+        res.status(200).json({ message: 'Order deleted successfully' });
     } catch (err) {
-        console.error("Error deleting order:", err);
-        return res.status(500).json({ error: "Internal Server Error" });
+        await client.query('ROLLBACK');
+        console.error('Error deleting order:', err);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    } finally {
+        client.release();
     }
 });
 
-
-app.post("/logout", verifyUser, (req, res) => {
-    try {
-        res.clearCookie("token", {
-            httpOnly: true,
-            secure: false,
-            sameSite: "Lax",
-        });
-        res.status(200).json({ message: 'Logged out', status: 'logout' });
-    } catch (err) {
-        res.status(500).json({ message: "Logout failed", error: err.message });
-    }
-});
 
 app.post("/logout", verifyUser, (req, res) => {
     try {
@@ -236,11 +173,14 @@ app.post("/logout", verifyUser, (req, res) => {
 
 const server = http.createServer(app);
 initSocket(server);
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
     console.log(`App is listening to port ${PORT}`);
-    mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true }).then(() => {
-        console.log('Database also connected');
-    }).catch(err => console.error('Mongo connection error:', err));
+    try {
+        await initDb();
+        console.log('Postgres DB initialized');
+    } catch (err) {
+        console.error('DB init error:', err);
+    }
 });
 
 require("./cron/schedulePendingBuyOrders");

@@ -2,7 +2,7 @@ const express = require('express');
 const { Signup, Login, resetPassword } = require('../Controllers/AuthController');
 const router = express.Router();
 const sendOtpMail = require('../utils/sendOtpMail');
-const {UsersModel} = require('../model/UsersModel');
+const { pool } = require('../db/pool');
 const jwt = require("jsonwebtoken");
 
 const otpStore = new Map();
@@ -42,12 +42,10 @@ router.post('/verifyOTP', async (req, res) => {
       secure: false,
       sameSite: "Lax", 
     });
-  const user = await UsersModel.findOne({ email });
-  if (user) {
-    return res.status(200).json({ status: 'login' });
-  } else {
-    return res.status(200).json({ status: 'signup' });
-  }
+  const userRes = await pool.query('SELECT * FROM users WHERE email=$1 LIMIT 1', [email]);
+  const user = userRes.rows[0];
+  if (user) return res.status(200).json({ status: 'login' });
+  return res.status(200).json({ status: 'signup' });
 });
 
 router.post("/getUsername", async (req, res) => {
@@ -59,7 +57,8 @@ router.post("/getUsername", async (req, res) => {
         const { email } = payload;
         if (!email) return res.status(400).json({ success: false, message: "Email is required in token" });
 
-        const user = await UsersModel.findOne({ email });
+        const userRes = await pool.query('SELECT * FROM users WHERE email=$1 LIMIT 1', [email]);
+        const user = userRes.rows[0];
         if (!user) return res.status(404).json({ success: false, message: "User not found for this email" });
 
         res.json({ success: true, username: user.username });
@@ -104,10 +103,9 @@ router.post('/verifyOTP1', async (req, res) => {
         sameSite: "Lax",
     });
 
-    // Set the new tempToken specifically for password reset
     res.cookie("tempToken", newResetTempToken, {
         httpOnly: true,
-        maxAge: 15 * 60 * 1000, // 15 minutes for reset flow
+        maxAge: 15 * 60 * 1000, 
         secure: process.env.NODE_ENV === "production",
         sameSite: "Lax",
     });
