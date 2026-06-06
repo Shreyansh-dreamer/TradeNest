@@ -2,8 +2,8 @@ function ChargesExplained() {
     return (
         <>
             <div className="mb-6 flex flex-col max-w-screen-lg mx-auto justify-center text-center items-center">
-                <p className="text-xl text-gray-700">
-                    <a className="text-[#387ed1] hover:text-gray-700 cursor-pointer">
+                <p className="text-xl text-gray-700 dark:text-gray-300">
+                    <a className="text-[#387ed1] dark:text-blue-400 hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer">
                         Calculate your costs upfront
                     </a>{" "}
                     using our brokerage calculator
@@ -11,20 +11,20 @@ function ChargesExplained() {
             </div>
 
             <div className="flex justify-center">
-                <div className="text-2xl text-gray-700 mx-8 w-full max-w-screen-lg text-left">
+                <div className="text-2xl text-gray-700 dark:text-gray-300 mx-8 w-full max-w-screen-lg text-left">
                     Charges explained
                 </div>
             </div>
 
             <div className="flex justify-center px-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 w-full max-w-screen-lg gap-10 text-sm text-gray-700 leading-6 mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 w-full max-w-screen-lg gap-10 text-sm text-gray-700 dark:text-gray-400 leading-6 mt-6">
                     {/* Column 1 */}
                     <div className="space-y-6">
                         <Section
                             title="Securities/Commodities transaction tax"
                             content={[
                                 "Tax by the government when transacting on the exchanges. Charged as above on both buy and sell sides when trading equity delivery. Charged only on selling side when trading intraday or on F&O.",
-                                "When trading at Zerodha, STT/CTT can be a lot more than the brokerage we charge. Important to keep a tab.",
+                                "STT/CTT can often exceed brokerage costs. We recommend monitoring these charges carefully in your trading activity.",
                             ]}
                         />
                         <Section
@@ -40,7 +40,7 @@ function ChargesExplained() {
                         <Section
                             title="Call & trade"
                             content={[
-                                "Additional charges of ₹50 per order for orders placed through a dealer at Zerodha including auto square off orders.",
+                                "For orders placed through our assisted trading service: ₹50 per order including auto square-off orders.",
                             ]}
                         />
                         <Section
@@ -99,7 +99,7 @@ function ChargesExplained() {
                         <Section
                             title="DP (Depository participant) charges"
                             content={[
-                                "₹15.34 per scrip (₹3.5 CDSL fee + ₹9.5 Zerodha fee + ₹2.34 GST) is charged on the trading account ledger when stocks are sold, irrespective of quantity.",
+                                "₹15.34 per scrip (₹3.5 CDSL fee + ₹9.5 DP fee + ₹2.34 GST) is charged on the trading account ledger when stocks are sold, irrespective of quantity.",
                                 "Female demat account holders (as first holder) will enjoy a discount of ₹0.25 per transaction on the CDSL fee.",
                                 "Debit transactions of mutual funds & bonds get an additional discount of ₹0.25 on the CDSL fee.",
                             ]}
@@ -155,8 +155,8 @@ function ChargesExplained() {
             {/* Disclaimer Section */}
             <div className="flex justify-center px-4">
                 <div className="text-left max-w-screen-lg mx-auto mt-8">
-                    <h2 className="font-medium text-lg text-gray-600 mb-4 mx-3">Disclaimer</h2>
-                    <p className="text-sm text-gray-600 leading-6 mx-3">
+                    <h2 className="font-medium text-lg text-gray-700 dark:text-gray-300 mb-4 mx-3">Disclaimer</h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 leading-6 mx-3">
                         For Delivery based trades, a minimum of ₹0.01 will be charged per contract note. Clients who opt to receive physical contract notes will be charged ₹20 per contract note plus courier charges. Brokerage will not exceed the rates specified by SEBI and the exchanges. All statutory and regulatory charges will be levied at actuals. Brokerage is also charged on expired, exercised, and assigned options contracts. Free investments are available only for our retail individual clients. Companies, Partnerships, Trusts, and HUFs need to pay 0.1% or ₹20 (whichever is less) as delivery brokerage. A brokerage of 0.25% of the contract value will be charged for contracts where physical delivery happens. For netted off positions in physically settled contracts, a brokerage of 0.1% will be charged.
                     </p>
                 </div>
@@ -167,8 +167,8 @@ function ChargesExplained() {
 }
 const Section = ({ title, content }) => (
     <div className="mx-3">
-        <h2 className="font-medium text-lg text-gray-600 mb-4">{title}</h2>
-        <div className="list-disc list-inside mt-1 space-y-3 text-sm text-gray-600">
+        <h2 className="font-medium text-lg text-gray-700 dark:text-gray-300 mb-4">{title}</h2>
+        <div className="list-disc list-inside mt-1 space-y-3 text-sm text-gray-600 dark:text-gray-400">
             {content.map((item, i) => (
                 <p key={i}>{item}</p>
             ))}

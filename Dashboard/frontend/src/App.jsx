@@ -4,22 +4,25 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./index.css";
 import Home from "./components/Home";
+import { ThemeProvider } from "./ThemeContext";
 
 const Apps = () => {
   return (
     <>
-      <BrowserRouter>
-        <Routes>
-          <Route
-            path="/*"
-            element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </BrowserRouter>
+      <ThemeProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route
+              path="/*"
+              element={
+                <ProtectedRoute>
+                  <Home />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </BrowserRouter>
+      </ThemeProvider>
     </>
   )
 };

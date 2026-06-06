@@ -9,24 +9,24 @@ function Faqs() {
 
     const items = [
         {
-            heading: "What is a Zerodha account?",
-            desc: "A Zerodha account is a combined demat and trading account that allows investors to buy, sell, and hold securities digitally."
+            heading: "What is a TradeNest account?",
+            desc: "A TradeNest account is a combined demat and trading account that allows you to buy, sell, and hold securities digitally with ease and transparency."
         },
         {
-            heading: "What documents are required to open a demat account?",
-            desc: "The following documents are required to open a Zerodha account online:\n• PAN number\n• Aadhaar Card (linked with a phone number for OTP verification)\n• Cancelled cheque or bank account statement (to link your bank account)\n• Income proof (required only if you wish to trade in Futures & Options)"
+            heading: "What documents are required to open an account?",
+            desc: "The following documents are required to open your TradeNest account online:\n• PAN (Permanent Account Number)\n• Aadhaar Card (linked with a phone number for verification)\n• Bank account details (cheque or statement)\n• Income proof (if trading in Futures & Options)"
         },
         {
-            heading: "Is Zerodha account opening free?",
-            desc: "Yes, it is completely free."
+            heading: "Is account opening completely free?",
+            desc: "Yes, opening your TradeNest account is absolutely free with no hidden charges."
         },
         {
-            heading: "Are there any maintenance charges for a demat account?",
-            desc: "The account maintenance charges are applicable based on the account type. For Basic Services Demat Account: Zero charges if the holding value is less than ₹4,00,000. For non-Basic Services Demat Accounts: ₹300 per year + GST."
+            heading: "What are the account maintenance fees?",
+            desc: "Account maintenance varies by type. Basic accounts with holdings under ₹4,00,000 have zero charges. Standard accounts are charged ₹300/year + GST, billed quarterly for uninterrupted service."
         },
         {
-            heading: "Can I open a demat account without a bank account?",
-            desc: "To open a demat account, you must have a bank account in your name. If UPI verification is completed successfully, no proof of bank is needed. However, if bank verification fails, you'll need to provide either a cancelled cheque or a bank statement to link your bank account to Zerodha."
+            heading: "Do I need a bank account to get started?",
+            desc: "Yes, a bank account is required to open a TradeNest account. We accept UPI verification for faster setup. If UPI verification isn't possible, provide a cancelled cheque or bank statement to link your account."
         }
     ];
 

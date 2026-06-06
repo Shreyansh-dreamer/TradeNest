@@ -15,7 +15,6 @@ const Dashboard = () => {
   const [showSidebar, setShowSidebar] = useState(false);
 
   useEffect(() => {
-  // initialize from last-known socket data
   setAllHoldings(getLastHoldings());
   const off = onSocket('holdings', (data) => setAllHoldings(data || []));
   return () => off();

@@ -21,8 +21,7 @@ const Login = () => {
         const fetchedEmail = res.data.email;
 
         if (!fetchedEmail) {
-          // Only redirect if not in a "forgot password" flow and no token exists
-          if (!forgotPassword) { // Add this check
+          if (!forgotPassword) { 
             window.location.href = "http://localhost:5173/signup";
           }
         } else {
@@ -40,18 +39,17 @@ const Login = () => {
         }
       } catch (error) {
         console.error("Error fetching initial user data or no tempToken:", error);
-        // Only redirect if not in a "forgot password" flow and an error occurs
-        if (!forgotPassword) { // Add this check
+        if (!forgotPassword) { 
           window.location.href = "http://localhost:5173/signup";
         }
       }
     };
     fetchEmailAndUserData();
-  }, [forgotPassword]); // Add forgotPassword to dependency array to re-run effect when it changes
+  }, [forgotPassword]); 
 
 
   const handleGetOtp = async () => {
-    if (!email) { // Ensure email is entered before trying to send OTP
+    if (!email) { 
         setStatusMessage("Please enter your email to send OTP.");
         return;
     }
@@ -72,14 +70,11 @@ const Login = () => {
     }
     try {
       const res = await axios.post("http://localhost:3002/verifyOTP1", {email, otp },{ withCredentials: true });
-      // CRITICAL FIX: Change "login" to "otp_verified" as per backend response
       if (res.data.status === "otp_verified") {
         setStatusMessage("OTP verified! You may reset your password.");
         setIsOtpVerified(true);
-        setOtpSent(false); // OTP is verified, hide the OTP input
+        setOtpSent(false); 
       } else {
-        // This 'else' block should ideally not be hit if status is always 'otp_verified' on success
-        // but it's good to have a fallback.
         setStatusMessage(res.data.message || "OTP verification failed due to unknown status.");
       }
     } catch (error) {
@@ -101,7 +96,7 @@ const Login = () => {
 
       if (res.data.message === "Password updated successfully.") {
         setStatusMessage("Password updated successfully! Logging you in...");
-        window.location.href = "http://localhost:5174"; // Redirect after successful reset and assumed auto-login
+        window.location.href = "http://localhost:5174"; 
       } else {
         setStatusMessage("Password reset failed: " + (res.data.message || "Unknown error."));
       }
@@ -130,29 +125,28 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-sm text-center">
-        <div className="w-20 h-20 mx-auto rounded-full bg-gray-100 flex items-center justify-center text-2xl font-medium text-indigo-700">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+      <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-md w-full max-w-sm text-center border border-transparent dark:border-gray-700">
+        <div className="w-20 h-20 mx-auto rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-2xl font-medium text-indigo-700 dark:text-indigo-400">
           {initials || "?"}
         </div>
-        <p className="mt-4 text-lg font-semibold">{username || "Loading..."}</p>
+        <p className="mt-4 text-lg font-semibold text-gray-900 dark:text-gray-100">{username || "Loading..."}</p>
         <input
           type="email"
           placeholder="Email"
-          className="w-full px-4 py-2 border rounded border-gray-300 bg-gray-100 text-gray-500"
+          className="w-full px-4 py-2 border rounded border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500"
           value={email}
-          // Enable email input if forgotPassword is true AND email is not already fetched
           onChange={(e) => setEmail(e.target.value)}
-          disabled={!forgotPassword && email !== ""} // Disable only if not forgotPassword AND email is already set
+          disabled={!forgotPassword && email !== ""}
         />
-        {statusMessage && <p className="mt-2 text-sm text-blue-600">{statusMessage}</p>}
+        {statusMessage && <p className="mt-2 text-sm text-blue-600 dark:text-blue-400">{statusMessage}</p>}
 
         {!forgotPassword && (
           <div className="relative mt-6 text-left">
             <input
               type={showPassword ? "text" : "password"}
               placeholder="Password"
-              className="w-full px-4 py-2 border rounded border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -161,27 +155,26 @@ const Login = () => {
 
         {forgotPassword && !isOtpVerified && (
           <div className="mt-6">
-            {/* Added "Get OTP" button for the forgot password flow */}
-            {!otpSent && ( // Only show Get OTP button if OTP hasn't been sent yet
+            {!otpSent && ( 
                 <button
                     onClick={handleGetOtp}
-                    className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 mb-4"
+                    className="w-full bg-blue-600 dark:bg-blue-500 text-white py-2 rounded hover:bg-blue-700 dark:hover:bg-blue-600 mb-4 transition-colors"
                 >
                     Get OTP
                 </button>
             )}
-            {otpSent && ( // Only show OTP input if OTP has been sent
+            {otpSent && ( 
               <>
                 <input
                   type="text"
                   placeholder="Enter OTP"
-                  className="w-full px-4 py-2 border rounded border-gray-300"
+                  className="w-full px-4 py-2 border rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
                 />
                 <button
                   onClick={handleVerifyOtp}
-                  className="w-full mt-4 bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+                  className="w-full mt-4 bg-blue-600 dark:bg-blue-500 text-white py-2 rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
                 >
                   Verify OTP
                 </button>
@@ -195,13 +188,13 @@ const Login = () => {
             <input
               type="password"
               placeholder="Enter new password"
-              className="w-full px-4 py-2 border rounded border-gray-300"
+              className="w-full px-4 py-2 border rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
             />
             <button
               onClick={handleResetPassword}
-              className="w-full mt-4 bg-green-600 text-white py-2 rounded hover:bg-green-700"
+              className="w-full mt-4 bg-green-600 dark:bg-green-500 text-white py-2 rounded hover:bg-green-700 dark:hover:bg-green-600 transition-colors"
             >
               Reset Password
             </button>
@@ -211,26 +204,26 @@ const Login = () => {
         {!forgotPassword && (
           <button
             onClick={handleLogin}
-            className="w-full mt-6 bg-orange-600 text-white py-2 rounded hover:bg-orange-700"
+            className="w-full mt-6 bg-orange-600 dark:bg-orange-500 text-white py-2 rounded hover:bg-orange-700 dark:hover:bg-orange-600 transition-colors"
           >
             Login
           </button>
         )}
 
         {!forgotPassword && !isOtpVerified && (
-          <p className="mt-4 text-sm text-gray-600">
+          <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
             <button
               onClick={() => {
                 setForgotPassword(true);
                 setStatusMessage("");
-                setPassword(""); // Clear password when entering forgot flow
-                setOtpSent(false); // Ensure OTP sending state is reset
-                setIsOtpVerified(false); // Ensure OTP verification state is reset
-                setOtp(""); // Clear OTP input
-                setNewPassword(""); // Clear new password input
-                // Do not clear email here, let the user input it if it wasn't fetched
+                setPassword(""); 
+                setOtpSent(false);
+                setIsOtpVerified(false); 
+                setOtp(""); 
+                setNewPassword(""); 
+                
               }}
-              className="text-blue-600 hover:underline"
+              className="text-blue-600 dark:text-blue-400 hover:underline"
             >
               Forgot user ID or password?
             </button>
@@ -238,7 +231,7 @@ const Login = () => {
         )}
 
         {forgotPassword && (
-          <p className="mt-4 text-sm text-gray-600">
+          <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
             <button
               onClick={() => {
                 setForgotPassword(false);
@@ -247,10 +240,8 @@ const Login = () => {
                 setNewPassword("");
                 setOtpSent(false);
                 setStatusMessage("");
-                // Email should remain if it was pre-filled, or be cleared if the user wants to start fresh
-                // For 'Back to Login', it's usually better to keep the email if it was already there.
               }}
-              className="text-blue-600 hover:underline"
+              className="text-blue-600 dark:text-blue-400 hover:underline"
             >
               Back to Login
             </button>

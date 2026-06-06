@@ -41,10 +41,10 @@ const SignUp = () => {
       <div className="mt-25 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 font-sans mb-8">
         <div className="text-center mb-15 max-w-screen-lg w-full">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-600 mb-4 leading-tight">
-            Open a free demat & trading account online
+            Your free demat & trading account awaits
           </h1>
           <p className="text-lg sm:text-xl text-gray-600">
-            Start investing brokerage free and join a community of 1.5+ crore investors and traders
+            Join over 1.5 crore investors who trade brokerage-free and invest without boundaries
           </p>
         </div>
 
@@ -53,7 +53,7 @@ const SignUp = () => {
           <div className="w-full md:w-1/2 p-4 sm:p-6 md:p-0 flex items-center justify-center">
             <img
               src="/media/images/signup.png"
-              alt="Zerodha Kite Platform Screenshot"
+              alt="TradeNest account signup"
               className="rounded-lg object-contain w-full h-auto max-h-96 md:max-h-full"
             />
           </div>
@@ -61,7 +61,7 @@ const SignUp = () => {
           {/* Right Form */}
           <div className="w-full md:w-1/2 flex flex-col justify-center p-6 sm:p-8 md:p-10">
             <p className="text-gray font-semibold-600 mb-6 text-lg">
-              To signup or login, enter your email ID
+              Enter your email to get started — sign up or log in instantly
             </p>
 
             {/* Email input */}
@@ -81,7 +81,7 @@ const SignUp = () => {
                 <input
                   type="text"
                   placeholder="Enter OTP"
-                  className="border border-gray-300 rounded-lg p-3 mb-4 w-full text-lg"
+                  className="border border-gray-300 rounded-lg p-3 mb-4 w-full text-lg text-gray-600"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
                   maxLength={6}
@@ -114,8 +114,8 @@ const SignUp = () => {
             )}
 
             <p className="text-gray-500 text-sm text-center mt-2">
-              By proceeding, you agree to the Zerodha{" "}
-              <a href="#" className="text-blue-600 hover:text-black">
+              Continuing means you accept our{" "}
+              <a href="#" className="text-blue-600 hover:text-black dark:hover:text-gray-200">
                 terms & privacy policy
               </a>
             </p>
@@ -124,8 +124,8 @@ const SignUp = () => {
       </div>
 
       {/* Investment Options */}
-      <h1 className="text-2xl md:text-4xl text-center font-medium text-gray-700 mb-14">
-        Investment options with Zerodha demat account
+      <h1 className="text-2xl md:text-4xl text-center font-medium text-gray-700 dark:text-gray-200 mb-14">
+        Everything you can grow with TradeNest
       </h1>
 
       <div className="flex justify-center items-center max-w-screen-lg mx-auto px-4 mb-10">
@@ -134,22 +134,22 @@ const SignUp = () => {
             {
               src: "/media/images/stocks.svg",
               title: "Stocks",
-              desc: "Invest in all exchange-listed securities",
+              desc: "Buy and hold any exchange-listed security with zero brokerage",
             },
             {
               src: "/media/images/mutual-funds.svg",
-              title: "Mutual funds",
-              desc: "Invest in commission-free direct mutual funds",
+              title: "Mutual Funds",
+              desc: "Direct MF investing at ₹0 commission — every paisa earns for you",
             },
             {
               src: "/media/images/ipo.svg",
               title: "IPO",
-              desc: "Apply to the latest IPOs instantly via UPI",
+              desc: "Apply to the latest IPOs in seconds using UPI — no paperwork",
             },
             {
               src: "/media/images/futures&opinions.svg",
-              title: "Futures & options",
-              desc: "Hedge and mitigate market risk through simplified F&O trading",
+              title: "Futures & Options",
+              desc: "Manage risk and capitalize on market moves with intuitive F&O tools",
             },
           ].map((item) => (
             <div className="flex flex-row p-4 m-2" key={item.title}>
@@ -174,15 +174,15 @@ const SignUp = () => {
       {/* Steps */}
       <div style={{ backgroundColor: "#fafafb" }} className="py-20">
         <div className="flex flex-col items-center justify-between max-w-screen-lg mx-auto px-4 gap-8">
-          <h1 className="text-xl md:text-4xl text-center text-gray-600 font-medium">
-            Steps to open a demat account with Zerodha
+          <h1 className="text-xl md:text-4xl text-center text-gray-600 dark:text-gray-200 font-medium">
+            You're just 3 steps away from the markets
           </h1>
           <div className="flex flex-col md:flex-row items-center w-full gap-10">
             <div className="w-full md:w-1/2">
               <img src="/media/images/steps-acop.svg" alt="Steps" className="w-full h-auto object-contain rounded-lg" />
             </div>
             <div className="w-full md:w-1/2 flex flex-col gap-6 text-left md:ml-6 lg:ml-10">
-              {["Enter the requested details", "Complete e-sign & verification", "Start investing!"].map((text, i) => (
+              {["Fill in your personal details", "Complete e-sign & KYC verification", "You're live — start investing!"].map((text, i) => (
                 <div className="flex items-start gap-4" key={i}>
                   <div className="w-7 h-7 border border-gray-400 rounded-full flex justify-center items-center text-sm font-medium text-gray-800">
                     {`0${i + 1}`}
@@ -202,14 +202,14 @@ const SignUp = () => {
         </div>
         <div className="px-3 w-full md:w-1/2 text-left md:ml-12">
           {[
-            ["Unbeatable pricing", "Zero charges for equity & mutual fund investments. Flat ₹20 fees for intraday and F&O trades."],
-            ["Best investing experience", "Simple and intuitive trading platform with an easy-to-understand user interface."],
-            ["No spam or gimmicks", "Committed to transparency — no gimmicks, spam, 'gamification', or intrusive push notifications."],
-            ["The Zerodha universe", "More than just an app — gain free access to the entire ecosystem of our partner products."],
+            ["Fair, transparent pricing", "₹0 for equity delivery and direct mutual funds. A flat ₹20 per executed intraday and F&O order — no surprises."],
+            ["Designed for every trader", "Whether you're placing your first order or managing complex derivatives — the interface stays clean and intuitive throughout."],
+            ["Straight talk, always", "No dark patterns, no gamification, no spam. Just an honest broker doing right by your money."],
+            ["An ecosystem, not just an app", "Expand your capabilities with research tools, automated strategies, insurance, and more through our partner network."],
           ].map(([title, desc], i) => (
             <div key={i}>
-              <h3 className="text-xl text-gray-800 mb-2 font-medium">{title}</h3>
-              <p className="text-gray-600 mb-4">{desc}</p>
+              <h3 className="text-xl text-gray-800 dark:text-gray-200 mb-2 font-medium">{title}</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">{desc}</p>
             </div>
           ))}
         </div>
@@ -220,16 +220,18 @@ const SignUp = () => {
 
       {/* Final CTA */}
       <div className="mt-15 max-w-screen-lg mx-auto text-center px-4 mb-16">
-        <h1 className="font-semibold text-4xl text-gray-700 mb-5">Open a Zerodha account</h1>
-        <p className="text-gray-600 text-lg mb-7">
-          Simple and intuitive apps · ₹0 for investments · ₹20 for intraday and F&O trades.
+        <h1 className="font-semibold text-4xl text-gray-700 dark:text-gray-200 mb-5">Begin your investment journey today</h1>
+        <p className="text-gray-600 dark:text-gray-400 text-lg mb-7">
+          Modern platform · ₹0 for equity & MF investments · ₹20 flat for intraday and F&O.
         </p>
         <motion.button
-          className="cursor-pointer px-6 py-3 text-white rounded text-xl font-semibold"
-          style={{ backgroundColor: "#387ed1" }}
-          whileHover={{ backgroundColor: "#000000" }}
+          id="signup-bottom-cta"
+          className="cursor-pointer px-8 py-3 text-white rounded-md text-xl font-semibold"
+          style={{ backgroundColor: "#2563eb" }}
+          whileHover={{ backgroundColor: "#1d4ed8" }}
+          whileTap={{ scale: 0.98 }}
         >
-          Sign up for free
+          Create free account
         </motion.button>
       </div>
     </>

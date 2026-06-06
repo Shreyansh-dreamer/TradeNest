@@ -1,96 +1,95 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faWallet,faCirclePlus,faUser,faChartSimple,faCoins} from '@fortawesome/free-solid-svg-icons';
-import {faCircleUser} from '@fortawesome/free-regular-svg-icons';
+import { faWallet, faCirclePlus, faUser, faChartSimple, faCoins } from '@fortawesome/free-solid-svg-icons';
+import { faCircleUser } from '@fortawesome/free-regular-svg-icons';
 
 const sections = [
   {
     title: (
       <span>
         <FontAwesomeIcon icon={faCirclePlus} />
-         &nbsp; Account Opening
+        &nbsp; Opening an Account
       </span>
     ),
     links: [
-      "Resident individual",
-      "Minor",
-      "Non Resident Indian (NRI)",
-      "Company, Partnership, HUF and LLP",
-      "Glossary",
+      "Individual (Resident)",
+      "Minor account",
+      "NRI account",
+      "Company, Partnership, HUF & LLP",
+      "Terms & glossary",
     ],
   },
   {
     title: (
       <span>
         <FontAwesomeIcon icon={faUser} />
-        &nbsp;Your Zerodha Account
+        &nbsp; Your TradeNest Account
       </span>
     ),
     links: [
-      "Your Profile",
-      "Account modification",
-      "Client Master Report (CMR) and Depository Participant (DP)",
-      "Nomination",
-      "Transfer and conversion of securities",
+      "Update your profile",
+      "Account modification requests",
+      "CMR and Depository Participant (DP)",
+      "Nomination & DDPI",
+      "Transfer & conversion of holdings",
     ],
   },
   {
     title: (
       <span>
         <FontAwesomeIcon icon={faChartSimple} />
-        &nbsp;Kite
+        &nbsp; Nexus (Trading Platform)
       </span>
     ),
     links: [
-      "IPO",
+      "IPO applications",
       "Trading FAQs",
-      "Margin Trading Facility (MTF) and Margins",
-      "Charts and orders",
-      "Alerts and Nudges",
-      "General",
+      "Margins & MTF",
+      "Charts, orders & positions",
+      "Alerts & smart nudges",
+      "General queries",
     ],
   },
   {
     title: (
       <span>
         <FontAwesomeIcon icon={faWallet} />
-        &nbsp;Funds
+        &nbsp; Funds & Payments
       </span>
     ),
     links: [
-        "Add money", 
-        "Withdraw money", 
-        "Add bank accounts", 
-        "eMandates"
+        "Add money",
+        "Withdraw funds",
+        "Manage bank accounts",
+        "Set up eMandates",
     ],
   },
   {
     title: (
       <span>
         <FontAwesomeIcon icon={faCircleUser} rotation={90} />
-        &nbsp;Console
+        &nbsp; Ledger (Back Office)
       </span>
     ),
     links: [
-      "Portfolio",
+      "Portfolio overview",
       "Corporate actions",
-      "Funds statement",
-      "Reports",
-      "Profile",
-      "Segments",
+      "Fund statement",
+      "Tax & compliance reports",
+      "Profile & segments",
     ],
   },
   {
     title: (
       <span>
         <FontAwesomeIcon icon={faCoins} />
-        &nbsp;Coin
+        &nbsp; Invest (Mutual Funds)
       </span>
     ),
     links: [
-      "Understanding mutual funds and Coin",
-      "Coin app",
-      "Coin web",
-      "Transactions and reports",
+      "Mutual fund basics",
+      "Using the Invest app",
+      "Invest via browser",
+      "Transaction history & reports",
       "National Pension Scheme (NPS)",
     ],
   },
@@ -100,22 +99,23 @@ const sections = [
 export default function SupportGrid() {
   return (
     <div className="max-w-screen-lg mx-auto px-4 py-8">
-      <h2 className="text-xl font-[450] mb-9 text-[#666666]">
-        To create a ticket, select a relevant topic
+      <h2 className="text-xl font-normal mb-9 text-gray-500 dark:text-gray-400">
+        Select a topic below to raise a support ticket
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-y-6 mx-1 md:mx-3">
-        {sections.map((section,index) => (
+        {sections.map((section, index) => (
           <div key={index}>
-            <h3 style={{ fontWeight: 450 }}
-                className="text-black mb-5 cursor-pointer hover:text-blue-600 text-lg font-semibold"
+            <h3
+              style={{ fontWeight: 450 }}
+              className="text-gray-800 dark:text-gray-200 mb-5 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 text-lg font-semibold transition-colors"
             >
-                {section.title}
+              {section.title}
             </h3>
             <ul className="space-y-1">
               {section.links.map((link) => (
                 <li
                   key={link}
-                  className="mx-1 md:mx-6 text-[#4484d2] cursor-pointer hover:text-black mb-2 text-sm"
+                  className="mx-1 md:mx-6 text-blue-500 dark:text-blue-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 mb-2 text-sm transition-colors"
                 >
                   {link}
                 </li>

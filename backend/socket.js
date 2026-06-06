@@ -2,22 +2,25 @@ const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
 const { pool } = require('./db/pool');
 const axios = require('axios');
-
 let ioInstance = null;
-let yahooFinance = null;
+let yahooFinance;
 
-function init(server) {
-  if (ioInstance) return ioInstance;
-  
+(async () => {
   if (!yahooFinance) {
     try {
-      yahooFinance = require('yahoo-finance2').default;
+      const yfModule = require('yahoo-finance2/dist/cjs/src/index.js');
+      const YahooFinanceClass = yfModule.default || yfModule;
+      yahooFinance = new YahooFinanceClass();
+      console.log('✅ yahoo-finance2 initialized successfully using direct CJS bridge!');
     } catch (err) {
-      console.warn('Warning: yahoo-finance2 failed to load. Indices will not be available.');
+      console.warn('Warning: yahoo-finance2 failed to load via fallback. Indices will not be available.');
+      console.error('Reason:', err.message);
       yahooFinance = null;
     }
   }
-  
+})();
+function init(server) {
+  if (ioInstance) return ioInstance;
   const allowedOrigins = ["http://localhost:5173", "http://localhost:5174"];
   const io = new Server(server, {
     cors: {
@@ -53,15 +56,20 @@ function init(server) {
 
     const indicesInterval = setInterval(async () => {
       try {
-        if (yahooFinance) {
-          const nifty = await yahooFinance.quote("^NSEI");
-          const sensex = await yahooFinance.quote("^BSESN");
+        const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=^NSEI,^BSESN`;
+        const res = await axios.get(url, {
+          headers: { 'User-Agent': 'Mozilla/5.0' } 
+        });
+        const result = res.data?.quoteResponse?.result;
+        if (result && result.length >= 2) {
+          const nifty = result.find(r => r.symbol === '^NSEI');
+          const sensex = result.find(r => r.symbol === '^BSESN');
           io.to(userId).emit('indices', { nifty, sensex });
         }
       } catch (err) {
-        console.error('Error fetching indices:', err);
+        console.error('Error fetching indices via direct stream:', err.message);
       }
-    }, 200);
+    }, 5000);
 
 
     socket.on('newOrder', async (payload, callback) => {
@@ -73,11 +81,12 @@ function init(server) {
         const change = payload.change;
         const net = payload.net;
         const inputMode = payload.mode?.toUpperCase();
-        if (!userId || !name || !qty || !price || !inputMode || !change || !net) {
+        if (!userId || !name || !qty || price == null || !inputMode || change == null || net == null) {
           return callback && callback({ error: 'Missing required fields for new order.' });
         }
-        const now = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
-        const date = new Date(now);
+        const now = new Date();
+        const kolkataTimeStr = now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
+        const date = new Date(kolkataTimeStr);
         const currentHour = date.getHours();
         const currentMinute = date.getMinutes();
         const isBeforeMarketOpen = currentHour < 9 || (currentHour === 9 && currentMinute < 15);
@@ -112,7 +121,7 @@ function init(server) {
             return callback && callback({ error: 'Not enough available margin.' });
           }
 
-          const insertRes = await client.query('INSERT INTO orders(user_id, name, qty, price, mode, time) VALUES($1,$2,$3,$4,$5,$6) RETURNING *', [userId, name, qty, price, orderMode, now]);
+          const insertRes = await client.query('INSERT INTO orders(user_id, name, qty, price, mode, time) VALUES($1,$2,$3,$4,$5,$6) RETURNING *', [userId, name, qty, price, orderMode, now.toISOString()]);
           const newOrder = insertRes.rows[0];
 
           if (orderMode === 'PENDING_BUY') {

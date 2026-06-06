@@ -15,7 +15,7 @@ router.post("/get-stocks", async (req, res) => {
       }
     });
     const peerList = response.data.companyProfile.peerCompanyList.map(company => ({
-      symbol:  company.companyName,
+      symbol: company.companyName,
       curr: company.price,
       change: company.percentChange,
       net: company.netChange,
@@ -30,24 +30,55 @@ router.post("/get-stocks", async (req, res) => {
   }
 })
 
+router.get("/search-ticker/:name", async (req, res) => {
+  try {
+    const query = req.params.name;
+    const url = `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(query)}&quotesCount=1&newsCount=0`;
+    const response = await axios.get(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0' }
+    });
+    const quotes = response.data?.quotes;
+    if (!quotes || quotes.length === 0) {
+      return res.status(404).json({ success: false, error: "Ticker match not found" });
+    }
+    const bestMatchTicker = quotes[0].symbol;
+    return res.status(200).json({ success: true, ticker: bestMatchTicker });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 
 const { spawn } = require('child_process');
 const path = require('path');
 
 router.get("/predict/:symbol", verifyUser, async (req, res) => {
-  const symbol = req.params.symbol;
+  let symbol = req.params.symbol;
   if (!symbol) return res.status(400).json({ success: false, error: "Symbol is required" });
-
   const scriptPath = path.join(__dirname, "../utils/predict.py");
-  
+  let ticker = symbol;
+  try {
+    const yahooSearchUrl = `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(ticker)}&quotesCount=1`;
+    const searchRes = await axios.get(yahooSearchUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    if (searchRes.data?.quotes && searchRes.data.quotes.length > 0) {
+      ticker = searchRes.data.quotes[0].symbol;
+      console.log(`Resolved target to exact Yahoo Ticker: ${ticker}`);
+    } else {
+      if (!ticker.includes('.')) ticker += '.NS';
+    }
+  } catch (lookupErr) {
+    console.warn("Yahoo autocomplete lookup failed, using fallback tracking structure:", lookupErr.message);
+    if (!ticker.includes('.')) ticker += '.NS';
+  }
+
   const runPython = (cmd) => {
     return new Promise((resolve, reject) => {
-      const child = spawn(cmd, [scriptPath, symbol]);
+      const child = spawn(cmd, [scriptPath, ticker]);
       let stdout = "";
       let stderr = "";
       child.stdout.on("data", (data) => { stdout += data.toString(); });
       child.stderr.on("data", (data) => { stderr += data.toString(); });
+      child.on("error", (err) => { reject(err); });
       child.on("close", (code) => {
         if (code !== 0) {
           reject(new Error(stderr || `Python process exited with code ${code}`));

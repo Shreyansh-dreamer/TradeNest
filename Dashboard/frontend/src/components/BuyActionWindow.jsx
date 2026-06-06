@@ -17,7 +17,8 @@ const BuyActionWindow = ({ stock, onClose }) => {
         axios
             .get("http://localhost:3002/userData", { withCredentials: true })
             .then((res) => {
-                setAvailableMargin(res.data.availableMargin);
+                setAvailableMargin(Number(res.data.available_margin) || 0);
+
             })
             .catch((err) => {
                 console.error("Error fetching user data:", err);

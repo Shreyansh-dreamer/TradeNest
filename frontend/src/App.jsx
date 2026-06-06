@@ -8,30 +8,33 @@ import SignUp from './landing_page/signup/SignUp';
 import Product from './landing_page/products/products';
 import Pricing from './landing_page/pricing/Pricing';
 import NotFound from './NotFound';
-import Login from './landing_page/login/Login'
+import Login from './landing_page/login/Login';
 import Register from './landing_page/register/Register';
+import { ThemeProvider } from './ThemeContext';
 
 function App() {
   return (
-    <BrowserRouter>
-      <div className="min-h-screen flex flex-col">
-        <div className="flex-grow">
-          <Navbar />
-          <Routes>
-            <Route path="/" element={<Home_page />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/about" element={<AboutSection />} />
-            <Route path="/product" element={<Product />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/support" element={<Support />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="*" element={<NotFound/>}/>
-          </Routes>
+    <ThemeProvider>
+      <BrowserRouter>
+        <div className="min-h-screen flex flex-col bg-[var(--bg-primary)]">
+          <div className="flex-grow">
+            <Navbar />
+            <Routes>
+              <Route path="/" element={<Home_page />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/about" element={<AboutSection />} />
+              <Route path="/product" element={<Product />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/support" element={<Support />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+          <Footer />
         </div>
-        <Footer />
-      </div>
-    </BrowserRouter>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

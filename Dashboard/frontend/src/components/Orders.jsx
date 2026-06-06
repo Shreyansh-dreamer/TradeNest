@@ -5,7 +5,6 @@ import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined
 
 const Orders = () => {
   const [allOrders, setAllOrders] = useState([]);
-  const [activeId, setActiveId] = useState(null);
 
   const fetchOrders = () => {
     setAllOrders(getLastOrders());
@@ -20,22 +19,21 @@ const Orders = () => {
   const handleDelete = (id) => {
     emitSocket('deleteOrder', id, (res) => {
       if (res?.error) console.error('Error deleting order:', res.error);
-      // server will emit updated orders; no further action required
     });
   };
 
   if (allOrders.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full space-y-4">
-        <h3 className="title text-lg font-semibold">
+      <div className="flex flex-col items-center justify-center h-full space-y-4 p-4 text-[var(--text-primary)]">
+        <h3 className="text-xl font-semibold mb-2">
           You have no orders placed yet.
         </h3>
-        <p className="text-gray-600">
+        <p className="text-[var(--text-muted)] text-center mb-6">
           Start trading by placing your first order.
         </p>
         <button
           onClick={() => alert("Buy or sell stocks to see your orders")}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="bg-[var(--accent)] text-white px-6 py-2 rounded hover:bg-[var(--accent-hover)] transition-colors shadow-sm"
         >
           Get Started
         </button>
@@ -44,56 +42,63 @@ const Orders = () => {
   }
 
   return (
-    <>
-      <h3 className="title">
+    <div className="w-full p-4">
+      <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">
         Orders ({allOrders.length})
       </h3>
 
-      <div className="order-table overflow-y-auto max-h-screen scrollbar">
-        <table className="border border-gray-300 min-w-full text-sm">
+      <div className="overflow-x-auto w-full max-w-full rounded-lg border border-[var(--border-color)] shadow-sm bg-[var(--bg-card)]">
+        <table className="min-w-max w-full text-left border-collapse">
           <thead>
-            <tr>
-              <th>Instrument</th>
-              <th>Qty.</th>
-              <th>Price</th>
-              <th>Mode</th>
-              <th>Date & Time</th>
-              <th>Status / Action</th>
+            <tr className="border-b border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-muted)] text-xs uppercase tracking-wider">
+              <th className="px-4 py-3 font-medium">Instrument</th>
+              <th className="px-4 py-3 font-medium">Qty.</th>
+              <th className="px-4 py-3 font-medium">Price</th>
+              <th className="px-4 py-3 font-medium">Mode</th>
+              <th className="px-4 py-3 font-medium">Date & Time</th>
+              <th className="px-4 py-3 font-medium">Status / Action</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="text-sm text-[var(--text-secondary)]">
             {allOrders.map((order, index) => (
               <tr
-                key={index}
-                className="odd:bg-white even:bg-gray-100 cursor-default"
+                key={order.id || index}
+                className="border-b border-[var(--border-color)] hover:bg-[var(--bg-secondary)] transition-colors cursor-default"
               >
-                <td>{order.name}</td>
-                <td>{order.qty}</td>
-                <td>{order.price.toFixed(2)}</td>
-                <td
-                  className={
-                    order.mode === "BUY"
-                      ? "text-green-600"
-                      : order.mode === "SELL"
-                        ? "text-red-600"
-                        : "text-yellow-500"
-                  }
-                >
-                  {order.mode}
+                <td className="px-4 py-3 font-medium text-[var(--text-primary)]">{order.name}</td>
+                <td className="px-4 py-3">{order.qty}</td>
+                <td className="px-4 py-3">
+                  {order.price ? Number(order.price).toFixed(2) : "0.00"}
                 </td>
-                <td>{new Date(order.createdAt).toLocaleString()}</td>
-                <td>
-                  {order.mode === "PENDING_BUY" || order.mode==="PENDING_SELL" ? (
+                <td
+                  className={`px-4 py-3 font-medium ${
+                    order.mode === "BUY" || order.mode === "PENDING_BUY"
+                      ? "text-blue-500"
+                      : order.mode === "SELL" || order.mode === "PENDING_SELL"
+                        ? "text-red-500"
+                        : "text-yellow-500"
+                  }`}
+                >
+                  {/* {order.mode ? order.mode.replace("PENDING_", "") : "UNKNOWN"} */}
+                  {order.mode?.startsWith("PENDING_") && (
+                    <span className="text-[10px] block text-amber-500 font-normal tracking-wide">(Pending)</span>
+                  )}
+                </td>
+                <td className="px-4 py-3">
+                  {order.time ? new Date(order.time).toLocaleString() : "N/A"}
+                </td>
+                <td className="px-4 py-3">
+                  {order.mode === "PENDING_BUY" || order.mode === "PENDING_SELL" ? (
                     <Tooltip title="Cancel Order" arrow>
                       <button
-                        onClick={() => handleDelete(order._id)}
-                        className="text-red-500 hover:text-red-700"
+                        onClick={() => handleDelete(order.id)}
+                        className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                       >
                         <DeleteOutlineOutlinedIcon fontSize="small" />
                       </button>
                     </Tooltip>
                   ) : (
-                    <span className="text-gray-600">Completed</span>
+                    <span className="text-[var(--text-muted)] bg-[var(--bg-secondary)] px-2 py-1 rounded text-xs font-medium border border-[var(--border-color)]">Completed</span>
                   )}
                 </td>
               </tr>
@@ -101,7 +106,7 @@ const Orders = () => {
           </tbody>
         </table>
       </div>
-    </>
+    </div>
   );
 };
 

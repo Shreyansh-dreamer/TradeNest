@@ -27,74 +27,84 @@ const Summary = ({ allHoldings }) => {
 
   const totalInvestment = getTotalInvestment(allHoldings);
   const equity = totalHoldingsValue + (allData.availableMargin || 0);
+  const pnl = totalHoldingsValue - totalInvestment;
+  const pnlPercent = totalInvestment > 0 ? (pnl / totalInvestment) * 100 : 0;
 
   return (
     <div className="w-full p-4">
       {/* User Greeting */}
-      <div className="mb-4">
-        <h6 className="text-lg font-medium">Hi, {allData.username}!</h6>
-        <hr className="my-2 border-gray-300" />
+      <div className="mb-5">
+        <h6 className="text-lg font-semibold text-[var(--text-primary)]">
+          Welcome back, {allData.username || "—"}
+        </h6>
+        <hr className="my-3 border-[var(--border-color)]" />
       </div>
 
       {/* Equity Section */}
-      <div className="mb-4">
-        <p className="text-sm font-medium text-gray-700 mb-2">Equity Overview</p>
-        <div className="bg-white p-4 rounded shadow-sm">
+      <div className="mb-5">
+        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">Equity Overview</p>
+        <div className="bg-[var(--bg-card)] p-4 rounded-lg border border-[var(--border-color)]">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
             <div className="mb-4 sm:mb-0">
-              <h3 className="text-2xl font-semibold">{equity.toFixed(2)}</h3>
-              <p className="text-sm text-gray-500">Total Equity</p>
+              <h3 className="text-2xl font-bold text-[var(--text-primary)]">₹{equity.toFixed(2)}</h3>
+              <p className="text-sm text-[var(--text-muted)] mt-1">Total Equity</p>
             </div>
 
-            <div className="flex flex-col text-sm text-gray-600">
+            <div className="flex flex-col text-sm text-[var(--text-secondary)] gap-1">
               <p>
-                Margin Available{" "}
-                <span className="font-semibold text-black">
-                  {allData.availableMargin || 0}
+                Available margin{" "}
+                <span className="font-semibold text-[var(--text-primary)]">
+                  ₹{allData.availableMargin || 0}
                 </span>
               </p>
               <p>
-                Margins Used{" "}
-                <span className="font-semibold text-black">
-                  {allData.marginsUsed || 0}
+                Margins used{" "}
+                <span className="font-semibold text-[var(--text-primary)]">
+                  ₹{allData.marginsUsed || 0}
                 </span>
               </p>
               <p>
-                Opening Balance{" "}
-                <span className="font-semibold text-black">
-                  {allData.openingBalance || 0}
+                Opening balance{" "}
+                <span className="font-semibold text-[var(--text-primary)]">
+                  ₹{allData.openingBalance || 0}
                 </span>
               </p>
             </div>
           </div>
         </div>
-        <hr className="my-4 border-gray-300" />
+        <hr className="my-4 border-[var(--border-color)]" />
       </div>
 
       {/* Holdings Section */}
       <div>
-        <p className="text-sm font-medium text-gray-700 mb-2">
-          Holdings Summary ({allHoldings.length})
+        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">
+          Holdings ({allHoldings.length})
         </p>
 
-        <div className="bg-white p-4 rounded shadow-sm">
+        <div className="bg-[var(--bg-card)] p-4 rounded-lg border border-[var(--border-color)]">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
             <div className="mb-4 sm:mb-0">
-              <h3 className="text-2xl font-semibold">{totalHoldingsValue.toFixed(2)}</h3>
-              <p className="text-sm text-gray-500">Current Market Value</p>
+              <h3 className="text-2xl font-bold text-[var(--text-primary)]">₹{totalHoldingsValue.toFixed(2)}</h3>
+              <p className="text-sm text-[var(--text-muted)] mt-1">Current Market Value</p>
             </div>
 
-            <div className="flex flex-col text-sm text-gray-600">
+            <div className="flex flex-col text-sm text-[var(--text-secondary)] gap-1">
               <p>
-                Total Investment{" "}
-                <span className="font-semibold text-black">
-                  {totalInvestment.toFixed(2)}
+                Invested{" "}
+                <span className="font-semibold text-[var(--text-primary)]">
+                  ₹{totalInvestment.toFixed(2)}
                 </span>
               </p>
               <p>
-                Average Investment per Stock{" "}
-                <span className="font-semibold text-black">
-                  {allHoldings.length > 0
+                P&L{" "}
+                <span className={`font-semibold ${pnl >= 0 ? "text-green-500" : "text-red-500"}`}>
+                  {pnl >= 0 ? "+" : ""}₹{pnl.toFixed(2)} ({pnlPercent >= 0 ? "+" : ""}{pnlPercent.toFixed(2)}%)
+                </span>
+              </p>
+              <p>
+                Avg. per stock{" "}
+                <span className="font-semibold text-[var(--text-primary)]">
+                  ₹{allHoldings.length > 0
                     ? (totalInvestment / allHoldings.length).toFixed(2)
                     : 0}
                 </span>
@@ -102,7 +112,7 @@ const Summary = ({ allHoldings }) => {
             </div>
           </div>
         </div>
-        <hr className="my-4 border-gray-300" />
+        <hr className="my-4 border-[var(--border-color)]" />
       </div>
     </div>
   );

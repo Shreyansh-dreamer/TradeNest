@@ -1,95 +1,162 @@
-import LeftSideText from "./LeftSideText";
-import RightSideText from "./RightSideText";
-import {motion} from "framer-motion";
+import { motion } from "framer-motion";
+import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 
 function Product() {
+    const mainProducts = [
+        {
+            heading: "Nexus",
+            text: "Our flagship trading terminal — lightning-fast, beautifully designed, and packed with professional-grade charts and analytics. Available on web and mobile.",
+            linkText: "Launch Nexus",
+            gradient: "from-blue-500/20 to-transparent",
+            icon: "⚡"
+        },
+        {
+            heading: "Ledger",
+            text: "Your TradeNest command center. Track portfolio performance, download reports, review transaction history, and stay on top of corporate actions — all in one place.",
+            linkText: "Learn more",
+            gradient: "from-purple-500/20 to-transparent",
+            icon: "📊"
+        },
+        {
+            heading: "Invest",
+            text: "Commission-free direct mutual funds, credited straight to your demat account. Build and manage diversified portfolios effortlessly on any device.",
+            linkText: "Start investing",
+            gradient: "from-green-500/20 to-transparent",
+            icon: "🌱"
+        },
+        {
+            heading: "NestAPI",
+            text: "Programmatic access to markets via our robust REST and WebSocket APIs. Ideal for algo traders, fintech builders, and developers who want full trading control.",
+            linkText: "API Docs",
+            gradient: "from-orange-500/20 to-transparent",
+            icon: "⚙️"
+        }
+    ];
+
     const partners = [
         {
-            name: "Zerodha Fund House",
+            name: "TradeNest Capital",
             logo: "/media/images/zerodhaFundhouse.png",
-            description:
-                "Our asset management venture that is creating simple and transparent index funds to help you save for your goals.",
+            description: "Our asset management arm building low-cost, transparent index funds — so your money grows steadily over time without the noise.",
         },
         {
-            name: "SENSIBULL",
+            name: "OptionFlow",
             logo: "/media/images/sensibullLogo.svg",
-            description:
-                "Options trading platform that lets you create strategies, analyze positions, and examine data points like open interest, FII/DII, and more.",
+            description: "A powerful options analytics suite to design strategies, visualize payoffs, and understand your real risk before placing a trade.",
         },
         {
-            name: "TIJORI",
+            name: "InsightHub",
             logo: "/media/images/tijori.svg",
-            description:
-                "Investment research platform that offers detailed insights on stocks, sectors, supply chains, and more.",
+            description: "In-depth equity and sector research with supply chain analysis — giving you an information edge in a crowded market.",
         },
         {
-            name: "Streak",
+            name: "Automate",
             logo: "/media/images/streak-logo.png",
-            description:
-                "Systematic trading platform that allows you to create and backtest strategies without coding.",
+            description: "Design, backtest, and deploy trading strategies with our no-code automation platform — no programming experience needed.",
         },
         {
-            name: "smallcase",
+            name: "Basket",
             logo: "/media/images/smallcaseLogo.png",
-            description:
-                "Thematic investing platform that helps you invest in diversified baskets of stocks on ETFs.",
+            description: "Invest in curated thematic portfolios aligned with ideas and trends — diversified, rebalanced, and easy to manage.",
         },
         {
-            name: "ditto",
+            name: "SafeGuard",
             logo: "/media/images/dittoLogo.png",
-            description:
-                "Personalized advice on life and health insurance. No spam and no mis-selling.",
+            description: "Unbiased, transparent insurance advice matched to your life situation — helping you protect what matters most.",
         },
     ];
 
     return (
-        <>
-            <div className="flex items-center border-b justify-center py-25 border-b-gray-200 ">
-                <div className="flex flex-col max-w-screen-lg justify-center items-center w-full px-4 text-center">
-                    <h1 className="text-5xl font-semibold text-gray-700 mb-4">Zerodha Products</h1>
-                    <p className="mb-2 text-2xl text-gray-600">Sleek, modern, and intuitive trading platforms</p>
-                    <p className="text-lg mt-3">
-                        Check out our{' '}
-                        <a href="#" className="text-[#387ed4] hover:text-black transition">
-                            investment offerings &#8594;
-                        </a>
+        <div className="w-full bg-[var(--bg-primary)] min-h-screen pt-20">
+            {/* Hero Section */}
+            <div className="flex flex-col items-center justify-center py-20 px-4">
+                <motion.h1 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-5xl md:text-7xl font-bold tracking-tight text-[var(--text-primary)] mb-6 text-center"
+                >
+                    Our Ecosystem
+                </motion.h1>
+                <motion.p 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="text-xl md:text-2xl text-[var(--text-secondary)] text-center max-w-2xl font-light"
+                >
+                    Purposefully built tools for every kind of market participant, designed with clarity and speed in mind.
+                </motion.p>
+            </div>
+
+            {/* Main Products Grid - Replaces old massive images */}
+            <div className="max-w-screen-xl mx-auto px-4 md:px-8 py-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                    {mainProducts.map((product, idx) => (
+                        <motion.div 
+                            key={idx}
+                            whileHover={{ y: -5 }}
+                            className={`flex flex-col justify-between p-8 md:p-12 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-color)] overflow-hidden relative group`}
+                        >
+                            <div className={`absolute top-0 left-0 w-full h-full bg-gradient-to-br ${product.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
+                            
+                            <div className="relative z-10">
+                                <span className="text-4xl mb-6 block">{product.icon}</span>
+                                <h2 className="text-3xl font-bold text-[var(--text-primary)] mb-4">{product.heading}</h2>
+                                <p className="text-[var(--text-secondary)] text-lg leading-relaxed mb-8">
+                                    {product.text}
+                                </p>
+                            </div>
+                            
+                            <div className="relative z-10 mt-auto">
+                                <a className="inline-flex items-center text-[var(--accent)] font-semibold text-lg cursor-pointer hover:text-[var(--accent-hover)] transition-colors group/link">
+                                    {product.linkText} 
+                                    <ArrowRightAltIcon className="ml-2 transform group-hover/link:translate-x-1 transition-transform" />
+                                </a>
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
+            </div>
+
+            <div className="w-full border-t border-b border-[var(--border-color)] bg-[var(--bg-secondary)] py-16 mt-12">
+                <div className="max-w-screen-lg mx-auto px-4 text-center">
+                    <p className="text-[var(--text-primary)] text-xl md:text-2xl font-light">
+                        Curious about how we build? Read our <a className="text-[var(--accent)] font-medium hover:underline cursor-pointer">Engineering Blog</a>.
                     </p>
                 </div>
             </div>
-            <br></br>
-            <RightSideText image={"/media/images/kite.png"} heading={"Kite"} text={"Our ultra-fast flagship trading platform with streaming market data, advanced charts, an elegant UI, and more. Enjoy the Kite experience seamlessly on your Android and iOS devices."} />
-            <LeftSideText image={"/media/images/console.png"} heading={"Console"} text={"The central dashboard for your Zerodha account. Gain insights into your trades and investments with in-depth reports and visualisations."} link={"Learn more"} />
-            <RightSideText image={"/media/images/coin.png"} heading={"Coin"} text={"Buy direct mutual funds online, commission-free, delivered directly to your Demat account. Enjoy the investment experience on your Android and iOS devices."} />
-            <LeftSideText image={"/media/images/kiteconnect.png"} heading={"Kite Connect API"} text={"Build powerful trading platforms and experiences with our super simple HTTP/JSON APIs. If you are a startup, build your investment app and showcase it to our clientbase."} link={"Kite Connect"} />
 
-            <p className="max-w-screen-lg mx-auto px-4 py-16 text-gray-600 text-center text-xl">Want to know more about our technology stack? Check out the <a className="text-blue-500 hover:text-black cursor-pointer">Zerodha.tech</a> blog.</p>
+            {/* Partner Ecosystem */}
+            <div className="max-w-screen-xl mx-auto px-4 py-24">
+                <div className="text-center mb-16">
+                    <h2 className="text-3xl md:text-4xl font-bold text-[var(--text-primary)] mb-4">Partner Ecosystem</h2>
+                    <p className="text-[var(--text-secondary)] text-lg max-w-2xl mx-auto">
+                        Specialized tools that integrate seamlessly with TradeNest to enhance your investment experience
+                    </p>
+                </div>
 
-            <div className="max-w-screen-lg mx-auto px-4 py-16 text-center">
-                {/* Heading */}
-                <h2 className="text-3xl font-semibold text-gray-800 mb-2">The Zerodha Universe</h2>
-                <p className="text-gray-600 mb-12">
-                    Extend your trading and investment experience even further with our partner platforms
-                </p>
-
-                {/* Partner Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
                     {partners.map((partner, index) => (
-                        <div key={index} className="flex flex-col items-center text-center">
-                            <img src={partner.logo} alt={partner.name} className="cursor-pointer hover:opacity-66 h-12 mb-4" />
-                            <p className="mx-8 md:mx-0 text-gray-400 text-sm">{partner.description}</p>
+                        <div key={index} className="flex flex-col p-8 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--accent)] transition-colors group">
+                            <img src={partner.logo} alt={partner.name} className="h-10 w-auto object-contain mb-6 opacity-80 group-hover:opacity-100 transition-opacity self-start" />
+                            <p className="text-[var(--text-secondary)] text-sm leading-relaxed">
+                                {partner.description}
+                            </p>
                         </div>
                     ))}
                 </div>
             </div>
 
-            <motion.button
-                className="px-6 py-3 text-white rounded text-xl font-semibold flex items-center justify-center mx-auto"
-                style={{ backgroundColor: "#387ed1" }}
-                whileHover={{ backgroundColor: "#000000" }}
-            >
-                Sign up for free
-            </motion.button>
-        </>
+            {/* CTA */}
+            <div className="flex justify-center pb-24 px-4">
+                <motion.button
+                    className="px-8 py-4 text-white rounded-full text-xl font-bold shadow-lg bg-[var(--accent)]"
+                    whileHover={{ scale: 1.05, backgroundColor: "var(--accent-hover)" }}
+                    whileTap={{ scale: 0.95 }}
+                >
+                    Create your free account
+                </motion.button>
+            </div>
+        </div>
     );
 }
 
