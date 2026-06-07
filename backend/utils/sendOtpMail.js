@@ -21,28 +21,25 @@
 
 // module.exports = sendOtpMail;
 
-const brevo = require('@getbrevo/brevo');
+const nodemailer = require("nodemailer");
 
 const sendOtpMail = async (email, otp) => {
-  console.log("Brevo Library Keys:", Object.keys(brevo));
-    let apiInstance = new brevo.TransactionalEmailsApi();
-    let apiKey = apiInstance.authentications['apiKey'];
-    apiKey.apiKey = process.env.BREVO_API_KEY; 
+  let transporter = nodemailer.createTransport({
+    host: "smtp-relay.brevo.com",
+    port: 587,
+    secure: false, 
+    auth: {
+      user: process.env.BREVO_USER, 
+      pass: process.env.BREVO_PASS, 
+    },
+  });
 
-    let sendSmtpEmail = new brevo.SendSmtpEmail();
-
-    sendSmtpEmail.sender = { "name": "TradeNest", "email": "freeapiuse2@gmail.com" };
-    sendSmtpEmail.to = [{ "email": email }];
-    sendSmtpEmail.subject = "Your OTP Code";
-    sendSmtpEmail.htmlContent = `<p>Your OTP is <b>${otp}</b>. It is valid for 5 minutes.</p>`;
-
-    try {
-        await apiInstance.sendTransacEmail(sendSmtpEmail);
-        console.log("Email sent successfully via Brevo API");
-    } catch (error) {
-        console.error("Brevo API Error Details:", error.response ? JSON.stringify(error.response.body, null, 2) : error);
-        throw error;
-    }
+  await transporter.sendMail({
+    from: '"TradeNest" <freeapiuse2@gmail.com>', 
+    to: email,
+    subject: "Your OTP Code",
+    html: `<p>Your OTP is <b>${otp}</b>. It is valid for 5 minutes.</p>`,
+  });
 };
 
 module.exports = sendOtpMail;
