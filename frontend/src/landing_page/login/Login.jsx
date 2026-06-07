@@ -27,7 +27,7 @@ const Login = () => {
           }
         } else {
           setEmail(fetchedEmail);
-          const res2 = await axios.post(`${import.meta.env.VITE_API_URL}/getUsername`, {}, { withCredentials: true });
+          const res2 = await axios.post(`${import.meta.env.VITE_API_URL}/getUsername`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem("tempToken")}` } });
           if (res2.data.success) {
             setUsername(res2.data.username);
             const initials = res2.data.username
@@ -56,7 +56,7 @@ const Login = () => {
     }
     try {
       const res = await axios.post(`${import.meta.env.VITE_API_URL}/getOtp1`,{email},
-        { withCredentials: true });
+        { headers: { Authorization: `Bearer ${localStorage.getItem("tempToken")}` } });
       setOtpSent(true);
       setStatusMessage("Enter the OTP sent to your email");
     } catch (error) {
@@ -70,7 +70,7 @@ const Login = () => {
         return;
     }
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/verifyOTP1`, {email, otp },{ withCredentials: true });
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/verifyOTP1`, {email, otp },{ headers: { Authorization: `Bearer ${localStorage.getItem("tempToken")}` } });
       if (res.data.status === "otp_verified") {
         setStatusMessage("OTP verified! You may reset your password.");
         setIsOtpVerified(true);
@@ -109,11 +109,13 @@ const Login = () => {
     try {
       const res = await axios.post(`${import.meta.env.VITE_API_URL}/login`, { password }, {
         headers: { Authorization: `Bearer ${localStorage.getItem("tempToken")}` }
-    });
-    if (res.data.success) {
+      });
+      if (res.data.success) {
         localStorage.setItem("token", res.data.token); 
-        window.location.href = redirectUrl;
-    } else {
+        localStorage.removeItem("tempToken"); 
+        const redirectUrl = import.meta.env.VITE_DASHBOARD_URL || "https://trade-nest-dboard.vercel.app";
+        window.location.href = redirectUrl.startsWith("http") ? redirectUrl : `https://${redirectUrl}`;
+      } else {
         setStatusMessage("Login failed: " + res.data.message);
       }
     } catch (error) {
