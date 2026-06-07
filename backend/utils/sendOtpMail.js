@@ -24,6 +24,7 @@
 const brevo = require('@getbrevo/brevo');
 
 const sendOtpMail = async (email, otp) => {
+  console.log("Brevo Library Keys:", Object.keys(brevo));
     let apiInstance = new brevo.TransactionalEmailsApi();
     let apiKey = apiInstance.authentications['apiKey'];
     apiKey.apiKey = process.env.BREVO_API_KEY; 
