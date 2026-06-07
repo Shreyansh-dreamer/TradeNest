@@ -27,11 +27,13 @@ module.exports.Signup = async (req, res, next) => {
       httpOnly: true,
       secure: true,
       sameSite: "None", 
+      path:'/',
     });
     res.clearCookie("tempToken", {
       httpOnly: true,
       secure: true,
       sameSite: "None",
+      path:'/',
     });
     res
       .status(201)
@@ -62,11 +64,13 @@ module.exports.Login = async (req, res, next) => {
       httpOnly: true,
       secure: true,
       sameSite: "None",
+      path:'/',
     });
     res.clearCookie("tempToken", {
       httpOnly: true,
       secure: true,
       sameSite: "None",
+      path:'/',
     });
     res.status(201).json({ message: "User logged in successfully", success: true,status: 'yes' });
     next()
@@ -100,11 +104,13 @@ module.exports.resetPassword = async (req, res) => {
       httpOnly: true,
       secure: true,
       sameSite: "None",
+      path:'/',
     });
     res.clearCookie("tempToken", {
       httpOnly: true,
       secure: true,
       sameSite: "None",
+      path:'/',
     });
     res.status(200).json({ message: "Password updated successfully." });
   } catch (error) {
