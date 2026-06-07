@@ -17,7 +17,7 @@ const Summary = ({ allHoldings }) => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:3002/userData", {
+      .get(`${import.meta.env.VITE_API_URL}/userData`, {
         withCredentials: true,
       })
       .then((res) => {

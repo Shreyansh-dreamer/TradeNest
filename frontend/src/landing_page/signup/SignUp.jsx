@@ -13,7 +13,7 @@ const SignUp = () => {
 
   const handleGetOtp = async () => {
     try {
-      const res = await axios.post("http://localhost:3002/getOtp", { email });
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/getOtp`, { email });
       setOtpSent(true);
       setStatusMessage("OTP sent to your email");
     } catch (error) {
@@ -23,7 +23,7 @@ const SignUp = () => {
 
   const handleVerifyOtp = async () => {
     try {
-      const res = await axios.post("http://localhost:3002/verifyOTP", { email, otp },{withCredentials: true});
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/verifyOTP`, { email, otp },{withCredentials: true});
       if (res.data.status === "login") {
         setStatusMessage("OTP verified! Redirecting to login...");
         window.location.href = "/login";

@@ -7,7 +7,7 @@ export const useStockData = (searchSymbol = "") => {
 
     useEffect(() => {
         axios
-            .get("http://localhost:3002/userData", {
+            .get(`${import.meta.env.VITE_API_URL}/userData`, {
                 withCredentials: true,
             })
             .then((res) => {
@@ -26,7 +26,7 @@ export const useStockData = (searchSymbol = "") => {
 
     useEffect(() => {
         axios
-            .get("http://localhost:3002/userData", {
+            .get(`${import.meta.env.VITE_API_URL}/userData`, {
                 withCredentials: true,
             })
             .then((res) => {
@@ -39,7 +39,7 @@ export const useStockData = (searchSymbol = "") => {
 
     useEffect(() => {
         const fetchData = async () => {
-            let symbolsToFetch = ["RELIANCE"]; //, "TCS","HDFCBANK", "INFY", "AXISBANK", "WIPRO"
+            let symbolsToFetch = ["RELIANCE"]; 
             if (allData.length > 0) {
                 const favsUpper = allData.map((f) => f.toUpperCase());
                 symbolsToFetch = [...new Set([...symbolsToFetch, ...favsUpper])];
@@ -52,7 +52,6 @@ export const useStockData = (searchSymbol = "") => {
                 try {
                     const res = await axios.get(`https://stock.indianapi.in/stock?name=${symbol}`, {
                         headers: {
-                            // 'X-Api-Key': '' // Keep your API key secure
                         }
                     });
                     const d = res.data;

@@ -76,7 +76,7 @@ const Predict = () => {
           }
         }, 800);
 
-        const res = await axios.get(`http://localhost:3002/predict/${selectedStock}`, {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/predict/${selectedStock}`, {
           withCredentials: true,
         });
 

@@ -14,7 +14,7 @@ const Funds = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:3002/userData", {
+      .get(`${import.meta.env.VITE_API_URL}/userData`, {
         withCredentials: true,
       })
       .then((res) => {
@@ -35,7 +35,7 @@ const Funds = () => {
     if (!isNaN(amount) && amount > 0) {
       axios
         .post(
-          "http://localhost:3002/addFunds",
+          `${import.meta.env.VITE_API_URL}/addFunds`,
           { amount },
           { withCredentials: true }
         )
@@ -58,7 +58,7 @@ const Funds = () => {
     if (!isNaN(amount) && amount > 0 && amount <= availableMargin) {
       axios
         .post(
-          "http://localhost:3002/withdrawFunds",
+          `${import.meta.env.VITE_API_URL}/withdrawFunds`,
           { amount },
           { withCredentials: true }
         )

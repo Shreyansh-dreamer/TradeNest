@@ -29,7 +29,7 @@ const Menu = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:3002/userData", {
+      .get(`${import.meta.env.VITE_API_URL}/userData`, {
         withCredentials: true,
       })
       .then((res) => {
@@ -72,8 +72,8 @@ const Menu = () => {
   };
 
   const handleLogOut = async () => {
-    const res = await axios.post("http://localhost:3002/logout", {}, { withCredentials: true });
-    if(res.data.status==="logout") window.location.href = "http://localhost:5173";
+    const res = await axios.post(`${import.meta.env.VITE_API_URL}/logout`, {}, { withCredentials: true });
+    if(res.data.status==="logout") window.location.href = import.meta.env.VITE_MAIN_URL;
   }
 
   const baseLinkClass = "text-gray-700 dark:text-gray-600 px-3 whitespace-nowrap text-sm font-medium";

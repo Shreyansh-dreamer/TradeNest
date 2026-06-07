@@ -10,12 +10,12 @@ const Register = () => {
   useEffect(() => {
   const fetchEmail = async () => {
     try {
-      const res = await axios.post("http://localhost:3002/getEmailFromToken", {}, { withCredentials: true });
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/getEmailFromToken`, {}, { withCredentials: true });
       if (res.data.email) setEmail(res.data.email);
-      else window.location.href = "http://localhost:5173/signup"; // no email found
+      else window.location.href = "/signup";
     } catch (err) {
       console.error("Could not fetch email:", err);
-      window.location.href = "http://localhost:5173/signup";
+      window.location.href = "/signup";
     }
   };
   fetchEmail();
@@ -29,7 +29,7 @@ const Register = () => {
 
     try {
       const res = await axios.post(
-        "http://localhost:3002/signup",
+        `${import.meta.env.VITE_API_URL}/signup`,
         {
           username,
           password,
@@ -40,7 +40,7 @@ const Register = () => {
       );
 
       if (res.data.status === "yes") {
-        window.location.href = "http://localhost:5174/"; // Redirect to Frontend B
+        window.location.href = import.meta.env.VITE_DASHBOARD_URL;
       } else {
         setStatusMessage(res.data.message || "Signup failed.");
       }

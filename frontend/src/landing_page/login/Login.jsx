@@ -17,16 +17,16 @@ const Login = () => {
   useEffect(() => {
     const fetchEmailAndUserData = async () => {
       try {
-        const res = await axios.post("http://localhost:3002/getEmailFromToken", {}, { withCredentials: true });
+        const res = await axios.post(`${import.meta.env.VITE_API_URL}/getEmailFromToken`, {}, { withCredentials: true });
         const fetchedEmail = res.data.email;
 
         if (!fetchedEmail) {
           if (!forgotPassword) { 
-            window.location.href = "http://localhost:5173/signup";
+            window.location.href = "/signup";
           }
         } else {
           setEmail(fetchedEmail);
-          const res2 = await axios.post("http://localhost:3002/getUsername", {}, { withCredentials: true });
+          const res2 = await axios.post(`${import.meta.env.VITE_API_URL}/getUsername`, {}, { withCredentials: true });
           if (res2.data.success) {
             setUsername(res2.data.username);
             const initials = res2.data.username
@@ -40,7 +40,7 @@ const Login = () => {
       } catch (error) {
         console.error("Error fetching initial user data or no tempToken:", error);
         if (!forgotPassword) { 
-          window.location.href = "http://localhost:5173/signup";
+          window.location.href = "/signup";
         }
       }
     };
@@ -54,7 +54,7 @@ const Login = () => {
         return;
     }
     try {
-      const res = await axios.post("http://localhost:3002/getOtp1",{email},
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/getOtp1`,{email},
         { withCredentials: true });
       setOtpSent(true);
       setStatusMessage("Enter the OTP sent to your email");
@@ -69,7 +69,7 @@ const Login = () => {
         return;
     }
     try {
-      const res = await axios.post("http://localhost:3002/verifyOTP1", {email, otp },{ withCredentials: true });
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/verifyOTP1`, {email, otp },{ withCredentials: true });
       if (res.data.status === "otp_verified") {
         setStatusMessage("OTP verified! You may reset your password.");
         setIsOtpVerified(true);
@@ -89,14 +89,14 @@ const Login = () => {
     }
     try {
       const res = await axios.post(
-        "http://localhost:3002/resetPassword",
+        `${import.meta.env.VITE_API_URL}/resetPassword`,
         { newPassword },
         { withCredentials: true }
       );
 
       if (res.data.message === "Password updated successfully.") {
         setStatusMessage("Password updated successfully! Logging you in...");
-        window.location.href = "http://localhost:5174"; 
+        window.location.href = import.meta.env.VITE_DASHBOARD_URL;
       } else {
         setStatusMessage("Password reset failed: " + (res.data.message || "Unknown error."));
       }
@@ -108,13 +108,13 @@ const Login = () => {
 
   const handleLogin = async () => {
     try {
-      const res = await axios.post("http://localhost:3002/login",{
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/login`,{
         password,
       }, {
         withCredentials: true,
       });
       if (res.data.success) {
-        window.location.href = "http://localhost:5174";
+        window.location.href = import.meta.env.VITE_DASHBOARD_URL;
       } else {
         setStatusMessage("Login failed: " + res.data.message);
       }

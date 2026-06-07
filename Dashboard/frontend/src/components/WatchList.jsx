@@ -41,7 +41,7 @@ const Watchlist = () => {
     try {
       setSearchLoading(true);
       const res = await axios.post(
-        'http://localhost:3002/get-stocks',
+        `${import.meta.env.VITE_API_URL}/get-stocks`,
         { data: searchValue },
         { withCredentials: true }
       );
@@ -140,7 +140,6 @@ const Watchlist = () => {
                   </div>
 
                   <div className="relative flex items-center space-x-3 w-full justify-end">
-                    {/* Price and change */}
                     <div
                       className={`flex items-center space-x-2 transition-opacity duration-200 ease-in-out ${hoverId === i || mobileActiveId === i
                           ? 'opacity-0 pointer-events-none'
@@ -156,7 +155,6 @@ const Watchlist = () => {
                       <p className="text-xs font-medium text-[var(--text-primary)]">₹{stock.curr}</p>
                     </div>
 
-                    {/* Buttons overlay */}
                     {(hoverId === i || mobileActiveId === i) && (
                       <div className="absolute right-0 flex items-center space-x-1 bg-[var(--bg-secondary)] px-1 py-0.5 rounded z-45">
                         <Tooltip title="Buy(B)" arrow>

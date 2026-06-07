@@ -15,7 +15,7 @@ const BuyActionWindow = ({ stock, onClose }) => {
 
     useEffect(() => {
         axios
-            .get("http://localhost:3002/userData", { withCredentials: true })
+            .get(`${import.meta.env.VITE_API_URL}/userData`, { withCredentials: true })
             .then((res) => {
                 setAvailableMargin(Number(res.data.available_margin) || 0);
 

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Navigate } from "react-router-dom";
 
 const ProtectedRoute = ({ children }) => {
   const [auth, setAuth] = useState(null);
@@ -12,18 +11,24 @@ const ProtectedRoute = ({ children }) => {
         withCredentials: true,
       })
       .then((res) => {
-        if (res.data.status) setAuth(true);
-        else setAuth(false);
+        if (res.data.status) {
+          setAuth(true);
+        } else {
+          setAuth(false);
+        }
       })
       .catch(() => setAuth(false));
   }, []);
 
-  if (auth === false) {
-    return <Navigate to="/login" replace />;
+  useEffect(() => {
+    if (auth === false) {
+      window.location.href = `${import.meta.env.VITE_MAIN_URL}/login`;
+    }
+  }, [auth]);
+
+  if (auth === null || auth === false) {
+    return <p>Loading...</p>;
   }
-
-  if (auth === null || auth === false) return <p>Loading...</p>;
-
   return children;
 };
 
