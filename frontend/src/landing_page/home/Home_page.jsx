@@ -32,7 +32,7 @@ function Home_page() {
                         className="px-10 py-4 text-white rounded-full text-xl font-semibold shadow-xl bg-[var(--accent)]"
                         whileHover={{ scale: 1.05, backgroundColor: "var(--accent-hover)", boxShadow: "0 20px 25px -5px rgba(37, 99, 235, 0.4)" }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => window.location.href = import.meta.env.VITE_SIGNUP_URL}
+                        onClick={() => window.location.href = import.meta.env.VITE_SIGNUP_URL || "/signup"}
                     >
                         Open free account
                     </motion.button>

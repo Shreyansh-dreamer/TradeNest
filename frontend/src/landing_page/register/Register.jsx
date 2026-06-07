@@ -40,7 +40,8 @@ const Register = () => {
       );
 
       if (res.data.status === "yes") {
-        window.location.href = import.meta.env.VITE_DASHBOARD_URL;
+        const redirectUrl = import.meta.env.VITE_DASHBOARD_URL || "https://trade-nest-dboard.vercel.app";
+        window.location.href = redirectUrl.startsWith("http") ? redirectUrl : `https://${redirectUrl}`;
       } else {
         setStatusMessage(res.data.message || "Signup failed.");
       }

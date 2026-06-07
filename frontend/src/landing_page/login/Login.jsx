@@ -96,7 +96,8 @@ const Login = () => {
 
       if (res.data.message === "Password updated successfully.") {
         setStatusMessage("Password updated successfully! Logging you in...");
-        window.location.href = import.meta.env.VITE_DASHBOARD_URL;
+        const redirectUrl = import.meta.env.VITE_DASHBOARD_URL || "https://trade-nest-dboard.vercel.app";
+        window.location.href = redirectUrl.startsWith("http") ? redirectUrl : `https://${redirectUrl}`;
       } else {
         setStatusMessage("Password reset failed: " + (res.data.message || "Unknown error."));
       }
@@ -114,7 +115,8 @@ const Login = () => {
         withCredentials: true,
       });
       if (res.data.success) {
-        window.location.href = import.meta.env.VITE_DASHBOARD_URL;
+        const redirectUrl = import.meta.env.VITE_DASHBOARD_URL || "https://trade-nest-dboard.vercel.app";
+        window.location.href = redirectUrl.startsWith("http") ? redirectUrl : `https://${redirectUrl}`;
       } else {
         setStatusMessage("Login failed: " + res.data.message);
       }

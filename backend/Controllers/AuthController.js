@@ -3,9 +3,15 @@ const { createSecretToken } = require("../utils/SecretToken");
 const bcrypt = require("bcryptjs");
 const jwt = require('jsonwebtoken');
 
+const getSignupRedirectUrl = () => {
+  const frontendUrl = process.env.VITE_MAIN_URL || "https://trade-nest-six.vercel.app";
+  const redirectBase = frontendUrl.startsWith("http") ? frontendUrl : `https://${frontendUrl}`;
+  return `${redirectBase}/signup`;
+};
+
 module.exports.Signup = async (req, res, next) => {
   const token = req.cookies.tempToken;
-  if(!token) return res.redirect("http://localhost:5173/signup");
+  if(!token) return res.redirect(getSignupRedirectUrl());
   const payload=jwt.verify(token,process.env.DUMMY_SECRET_KEY);
   const {email}=payload;
   try {
@@ -19,14 +25,14 @@ module.exports.Signup = async (req, res, next) => {
     const token = createSecretToken(user.id);
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false,
-      sameSite: "Lax", 
+      secure: true,
+      sameSite: "None", 
     });
     res.clearCookie("tempToken", {
-    httpOnly: true,
-    secure: false,
-    sameSite: "Lax",
-  });
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+    });
     res
       .status(201)
       .json({ message: "User signed in successfully", success: true, user,status: 'yes' });
@@ -38,7 +44,7 @@ module.exports.Signup = async (req, res, next) => {
 
 module.exports.Login = async (req, res, next) => {
   const token = req.cookies.tempToken;
-  if(!token) return res.redirect("http://localhost:5173/signup")
+  if(!token) return res.redirect(getSignupRedirectUrl())
   const payload=jwt.verify(token,process.env.DUMMY_SECRET_KEY);
   const {email}=payload;
   try {
@@ -54,14 +60,14 @@ module.exports.Login = async (req, res, next) => {
     const token = createSecretToken(user.id);
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false,
-      sameSite: "Lax",
+      secure: true,
+      sameSite: "None",
     });
     res.clearCookie("tempToken", {
-    httpOnly: true,
-    secure: false,
-    sameSite: "Lax",
-  });
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+    });
     res.status(201).json({ message: "User logged in successfully", success: true,status: 'yes' });
     next()
   } catch (error) {
@@ -71,7 +77,7 @@ module.exports.Login = async (req, res, next) => {
 
 module.exports.resetPassword = async (req, res) => {
   const token = req.cookies.tempToken;
-  if(!token) return res.redirect("http://localhost:5173/signup")
+  if(!token) return res.redirect(getSignupRedirectUrl())
   const payload=jwt.verify(token,process.env.DUMMY_SECRET_KEY);
   const {email}=payload;
   try {
@@ -92,14 +98,14 @@ module.exports.resetPassword = async (req, res) => {
     const token = createSecretToken(user.id);
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false,
-      sameSite: "Lax",
+      secure: true,
+      sameSite: "None",
     });
     res.clearCookie("tempToken", {
-    httpOnly: true,
-    secure: false,
-    sameSite: "Lax",
-  });
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+    });
     res.status(200).json({ message: "Password updated successfully." });
   } catch (error) {
     console.error("Error resetting password:", error);

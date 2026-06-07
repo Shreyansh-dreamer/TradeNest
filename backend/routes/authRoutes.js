@@ -55,16 +55,16 @@ router.post("/getUsername", async (req, res) => {
     try {
         const payload = jwt.verify(token, process.env.DUMMY_SECRET_KEY);
         const { email } = payload;
-        if (!email) return res.status(400).json({ success: true, message: "Email is required in token" });
+        if (!email) return res.status(400).json({ success: false, message: "Email is required in token" });
 
         const userRes = await pool.query('SELECT * FROM users WHERE email=$1 LIMIT 1', [email]);
         const user = userRes.rows[0];
-        if (!user) return res.status(404).json({ success: true, message: "User not found for this email" });
+        if (!user) return res.status(404).json({ success: false, message: "User not found for this email" });
 
         res.json({ success: true, username: user.username });
     } catch (err) {
         console.error("Error fetching username:", err);
-        res.status(401).json({ success: true, message: "Invalid or expired temp token" });
+        res.status(401).json({ success: false, message: "Invalid or expired temp token" });
     }
 });
 

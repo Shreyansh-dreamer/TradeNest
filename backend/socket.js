@@ -21,7 +21,12 @@ let yahooFinance;
 })();
 function init(server) {
   if (ioInstance) return ioInstance;
-  const allowedOrigins = ["http://localhost:5173", "http://localhost:5174"];
+  const allowedOrigins = [
+    "https://trade-nest-six.vercel.app",
+    "https://trade-nest-dboard.vercel.app",
+    "http://localhost:5173",
+    "http://localhost:5174"
+  ];
   const io = new Server(server, {
     cors: {
       origin: allowedOrigins,

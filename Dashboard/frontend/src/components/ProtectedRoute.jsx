@@ -22,7 +22,9 @@ const ProtectedRoute = ({ children }) => {
 
   useEffect(() => {
     if (auth === false) {
-      window.location.href = `${import.meta.env.VITE_MAIN_URL}/login`;
+      const redirectUrl = import.meta.env.VITE_MAIN_URL || "https://trade-nest-six.vercel.app";
+      const baseUrl = redirectUrl.startsWith("http") ? redirectUrl : `https://${redirectUrl}`;
+      window.location.href = `${baseUrl}/login`;
     }
   }, [auth]);
 

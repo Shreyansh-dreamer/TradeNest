@@ -73,7 +73,10 @@ const Menu = () => {
 
   const handleLogOut = async () => {
     const res = await axios.post(`${import.meta.env.VITE_API_URL}/logout`, {}, { withCredentials: true });
-    if(res.data.status==="logout") window.location.href = import.meta.env.VITE_MAIN_URL;
+    if (res.data.status === "logout") {
+      const redirectUrl = import.meta.env.VITE_MAIN_URL || "https://trade-nest-six.vercel.app";
+      window.location.href = redirectUrl.startsWith("http") ? redirectUrl : `https://${redirectUrl}`;
+    }
   }
 
   const baseLinkClass = "text-gray-700 dark:text-gray-600 px-3 whitespace-nowrap text-sm font-medium";

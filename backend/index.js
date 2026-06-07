@@ -20,7 +20,7 @@ const app = express();
 
 app.use(bodyParser.json());
 app.use(cookieParser());
-const allowedOrigins = ["https://tradenest-1-cta0.onrender.com","*","https://trade-nest-six.vercel.app", "https://trade-nest-dboard.vercel.app","http://localhost:5173", "http://localhost:5174"];
+const allowedOrigins = ["https://trade-nest-six.vercel.app", "https://trade-nest-dboard.vercel.app", "http://localhost:5173", "http://localhost:5174"];
 app.use(cors({
     origin: function (origin, callback) {
         if (!origin || allowedOrigins.includes(origin)) {
@@ -161,8 +161,8 @@ app.post("/logout", verifyUser, (req, res) => {
     try {
         res.clearCookie("token", {
             httpOnly: true,
-            secure: false,
-            sameSite: "Lax",
+            secure: true,
+            sameSite: "None",
         });
         res.status(200).json({ message: 'Logged out', status: 'logout' });
     } catch (err) {
