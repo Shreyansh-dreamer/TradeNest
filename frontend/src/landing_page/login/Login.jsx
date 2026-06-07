@@ -114,7 +114,8 @@ const Login = () => {
         localStorage.setItem("token", res.data.token); 
         localStorage.removeItem("tempToken"); 
         const redirectUrl = import.meta.env.VITE_DASHBOARD_URL || "https://trade-nest-dboard.vercel.app";
-        window.location.href = redirectUrl.startsWith("http") ? redirectUrl : `https://${redirectUrl}`;
+        // window.location.href = redirectUrl.startsWith("http") ? redirectUrl : `https://${redirectUrl}`;
+        console.log("Redirect logic triggered: Authentication failed or token missing.");
       } else {
         setStatusMessage("Login failed: " + res.data.message);
       }
