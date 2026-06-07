@@ -39,9 +39,9 @@ const Login = () => {
         }
       } catch (error) {
         console.error("Error fetching initial user data or no tempToken:", error);
-        // if (!forgotPassword) { 
-        //   window.location.href = "/signup";
-        // }
+        if (!forgotPassword) { 
+          window.location.href = "/signup";
+        }
       }
     };
     fetchEmailAndUserData();

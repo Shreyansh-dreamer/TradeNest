@@ -24,7 +24,7 @@ const ProtectedRoute = ({ children }) => {
     if (auth === false) {
       const redirectUrl = import.meta.env.VITE_MAIN_URL || "https://trade-nest-six.vercel.app";
       const baseUrl = redirectUrl.startsWith("http") ? redirectUrl : `https://${redirectUrl}`;
-      window.location.href = `${baseUrl}/login`;
+      // window.location.href = `${baseUrl}/login`;
     }
   }, [auth]);
 
