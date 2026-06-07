@@ -26,7 +26,7 @@ const SignUp = () => {
       const res = await axios.post(`${import.meta.env.VITE_API_URL}/verifyOTP`, { email, otp },{withCredentials: true});
       if (res.data.status === "login") {
         setStatusMessage("OTP verified! Redirecting to login...");
-        window.location.href = "/login";
+        window.location.href = "/Login";
       } else {
         setStatusMessage("OTP verified! Redirecting to signup...");
         window.location.href = "/register";
