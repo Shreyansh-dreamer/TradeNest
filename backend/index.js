@@ -20,7 +20,7 @@ const app = express();
 
 app.use(bodyParser.json());
 app.use(cookieParser());
-const allowedOrigins = ["http://localhost:5173", "http://localhost:5174"];
+const allowedOrigins = ["https://trade-nest-six.vercel.app", "https://trade-nest-dboard.vercel.app","http://localhost:5173", "http://localhost:5174"];
 app.use(cors({
     origin: function (origin, callback) {
         if (!origin || allowedOrigins.includes(origin)) {

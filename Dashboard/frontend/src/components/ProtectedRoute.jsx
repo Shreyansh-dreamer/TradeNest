@@ -6,8 +6,9 @@ const ProtectedRoute = ({ children }) => {
   const [auth, setAuth] = useState(null);
 
   useEffect(() => {
+    const backendUrl = import.meta.env.VITE_API_URL || "";
     axios
-      .get("http://localhost:3002/verifyUser", {
+      .get(`${backendUrl}/verifyUser`, {
         withCredentials: true,
       })
       .then((res) => {
@@ -17,11 +18,9 @@ const ProtectedRoute = ({ children }) => {
       .catch(() => setAuth(false));
   }, []);
 
-  useEffect(() => {
-    if (auth === false) {
-      window.location.href = "http://localhost:5173/login";
-    }
-  }, [auth]);
+  if (auth === false) {
+    return <Navigate to="/login" replace />;
+  }
 
   if (auth === null || auth === false) return <p>Loading...</p>;
 
