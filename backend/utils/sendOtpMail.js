@@ -21,15 +21,14 @@
 
 // module.exports = sendOtpMail;
 
-const SibApiV3Sdk = require('@getbrevo/brevo');
+const brevo = require('@getbrevo/brevo');
 
 const sendOtpMail = async (email, otp) => {
-    let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-    
+    let apiInstance = new brevo.TransactionalEmailsApi();
     let apiKey = apiInstance.authentications['apiKey'];
     apiKey.apiKey = process.env.BREVO_API_KEY; 
 
-    let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+    let sendSmtpEmail = new brevo.SendSmtpEmail();
 
     sendSmtpEmail.sender = { "name": "TradeNest", "email": "freeapiuse2@gmail.com" };
     sendSmtpEmail.to = [{ "email": email }];
@@ -40,7 +39,7 @@ const sendOtpMail = async (email, otp) => {
         await apiInstance.sendTransacEmail(sendSmtpEmail);
         console.log("Email sent successfully via Brevo API");
     } catch (error) {
-        console.error("Brevo API Error:", error.response ? error.response.body : error);
+        console.error("Brevo API Error Details:", error.response ? JSON.stringify(error.response.body, null, 2) : error);
         throw error;
     }
 };
