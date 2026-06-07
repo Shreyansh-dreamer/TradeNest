@@ -17,7 +17,7 @@ const SignUp = () => {
       setOtpSent(true);
       setStatusMessage("OTP sent to your email");
     } catch (error) {
-      setStatusMessage("Failed to send OTP: " + error.response?.data?.message || error.message);
+      setStatusMessage("Failed to send OTP: " + (error.response?.data?.message || error.message));
     }
   };
 
@@ -32,7 +32,7 @@ const SignUp = () => {
         window.location.href = "/register";
       }
     } catch (error) {
-      setStatusMessage("OTP verification failed: " + error.response?.data?.message || error.message);
+      setStatusMessage("OTP verification failed: " + (error.response?.data?.message || error.message));
     }
   };
 
