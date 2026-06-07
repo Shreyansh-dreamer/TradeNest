@@ -43,6 +43,7 @@ router.post('/verifyOTP', async (req, res) => {
       maxAge: 15 * 60 * 1000,
       secure: true,
       sameSite: "None", 
+      path: "/",
     });
   const userRes = await pool.query('SELECT * FROM users WHERE email=$1 LIMIT 1', [email]);
   const user = userRes.rows[0];
@@ -103,6 +104,7 @@ router.post('/verifyOTP1', async (req, res) => {
         httpOnly: true,
         secure: true,
         sameSite: "None",
+        path: "/",
     });
 
     res.cookie("tempToken", newResetTempToken, {
@@ -110,11 +112,13 @@ router.post('/verifyOTP1', async (req, res) => {
         maxAge: 15 * 60 * 1000, 
         secure: true,
         sameSite: "None",
+        path: "/",
     });
     res.status(200).json({ status: 'otp_verified', message: 'OTP verified! Proceed to reset password.' });
 });
 
 router.post("/getEmailFromToken", (req, res) => {
+  console.log("Cookies received:", req.cookies);
   const token = req.cookies.tempToken;
   if (!token) {
     console.log("No tempToken cookie found");
