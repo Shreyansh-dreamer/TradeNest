@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 
 const verifyUser = (req, res, next) => {
+  console.log("Headers:", req.headers.cookie);
   const token = req.cookies.token;
   if (!token) return res.status(401).json({ message: "Auth token not found" });
 
@@ -9,6 +10,7 @@ const verifyUser = (req, res, next) => {
     req.userId = decoded.id;
     next();
   } catch (err) {
+    console.log("JWT Verify Error:", err.message);
     return res.status(401).json({ message: "Invalid token" });
   }
 };
