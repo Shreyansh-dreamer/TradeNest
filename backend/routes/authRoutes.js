@@ -39,8 +39,8 @@ router.post('/verifyOTP', async (req, res) => {
     res.cookie("tempToken", tempToken, {
       httpOnly: true,
       maxAge: 15 * 60 * 1000,
-      secure: false,
-      sameSite: "Lax", 
+      secure: true,
+      sameSite: "None", 
     });
   const userRes = await pool.query('SELECT * FROM users WHERE email=$1 LIMIT 1', [email]);
   const user = userRes.rows[0];
@@ -55,16 +55,16 @@ router.post("/getUsername", async (req, res) => {
     try {
         const payload = jwt.verify(token, process.env.DUMMY_SECRET_KEY);
         const { email } = payload;
-        if (!email) return res.status(400).json({ success: false, message: "Email is required in token" });
+        if (!email) return res.status(400).json({ success: true, message: "Email is required in token" });
 
         const userRes = await pool.query('SELECT * FROM users WHERE email=$1 LIMIT 1', [email]);
         const user = userRes.rows[0];
-        if (!user) return res.status(404).json({ success: false, message: "User not found for this email" });
+        if (!user) return res.status(404).json({ success: true, message: "User not found for this email" });
 
         res.json({ success: true, username: user.username });
     } catch (err) {
         console.error("Error fetching username:", err);
-        res.status(401).json({ success: false, message: "Invalid or expired temp token" });
+        res.status(401).json({ success: true, message: "Invalid or expired temp token" });
     }
 });
 
@@ -99,15 +99,15 @@ router.post('/verifyOTP1', async (req, res) => {
   const newResetTempToken = jwt.sign({ email, reset: true }, process.env.DUMMY_SECRET_KEY, { expiresIn: "15m" });
   res.clearCookie("tempToken", {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "Lax",
+        secure: true,
+        sameSite: "None",
     });
 
     res.cookie("tempToken", newResetTempToken, {
         httpOnly: true,
         maxAge: 15 * 60 * 1000, 
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "Lax",
+        secure: true,
+        sameSite: "None",
     });
     res.status(200).json({ status: 'otp_verified', message: 'OTP verified! Proceed to reset password.' });
 });
