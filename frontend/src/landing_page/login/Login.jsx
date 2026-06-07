@@ -17,9 +17,10 @@ const Login = () => {
   useEffect(() => {
     const fetchEmailAndUserData = async () => {
       try {
-        const res = await axios.post(`${import.meta.env.VITE_API_URL}/getEmailFromToken`, {}, { withCredentials: true });
-        const fetchedEmail = res.data.email;
-
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/getEmailFromToken`, {}, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("tempToken")}` }
+      });        
+      const fetchedEmail = res.data.email;
         if (!fetchedEmail) {
           if (!forgotPassword) { 
             window.location.href = "/signup";
@@ -88,12 +89,9 @@ const Login = () => {
         return;
     }
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/resetPassword`,
-        { newPassword },
-        { withCredentials: true }
-      );
-
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/resetPassword`, { newPassword }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("tempToken")}` }
+      });
       if (res.data.message === "Password updated successfully.") {
         setStatusMessage("Password updated successfully! Logging you in...");
         const redirectUrl = import.meta.env.VITE_DASHBOARD_URL || "https://trade-nest-dboard.vercel.app";
@@ -109,15 +107,13 @@ const Login = () => {
 
   const handleLogin = async () => {
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/login`,{
-        password,
-      }, {
-        withCredentials: true,
-      });
-      if (res.data.success) {
-        const redirectUrl = import.meta.env.VITE_DASHBOARD_URL || "https://trade-nest-dboard.vercel.app";
-        window.location.href = redirectUrl.startsWith("http") ? redirectUrl : `https://${redirectUrl}`;
-      } else {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/login`, { password }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("tempToken")}` }
+    });
+    if (res.data.success) {
+        localStorage.setItem("token", res.data.token); 
+        window.location.href = redirectUrl;
+    } else {
         setStatusMessage("Login failed: " + res.data.message);
       }
     } catch (error) {

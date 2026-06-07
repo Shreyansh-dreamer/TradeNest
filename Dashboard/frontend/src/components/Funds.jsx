@@ -15,7 +15,7 @@ const Funds = () => {
   useEffect(() => {
     axios
       .get(`${import.meta.env.VITE_API_URL}/userData`, {
-        withCredentials: true,
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       })
       .then((res) => {
         setAllData(res.data);
@@ -37,7 +37,7 @@ const Funds = () => {
         .post(
           `${import.meta.env.VITE_API_URL}/addFunds`,
           { amount },
-          { withCredentials: true }
+          { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
         )
         .then((res) => {
           setAvailableMargin(prev => Number(res.data.available_margin ?? res.data.availableMargin ?? prev));
@@ -60,7 +60,7 @@ const Funds = () => {
         .post(
           `${import.meta.env.VITE_API_URL}/withdrawFunds`,
           { amount },
-          { withCredentials: true }
+          { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
         )
         .then((res) => {
           setAvailableMargin(Number(res.data.available_margin) || 0);

@@ -8,7 +8,7 @@ export const useStockData = (searchSymbol = "") => {
     useEffect(() => {
         axios
             .get(`${import.meta.env.VITE_API_URL}/userData`, {
-                withCredentials: true,
+                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
             })
             .then((res) => {
                 if (res.data && Array.isArray(res.data.favourites)) {
@@ -27,7 +27,7 @@ export const useStockData = (searchSymbol = "") => {
     useEffect(() => {
         axios
             .get(`${import.meta.env.VITE_API_URL}/userData`, {
-                withCredentials: true,
+                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
             })
             .then((res) => {
                 setAllData(res.data.favourites);

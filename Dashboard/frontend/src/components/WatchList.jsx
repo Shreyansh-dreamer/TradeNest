@@ -43,7 +43,7 @@ const Watchlist = () => {
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/get-stocks`,
         { data: searchValue },
-        { withCredentials: true }
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
       setSearchData(res.data.response || []);
     } catch (err) {

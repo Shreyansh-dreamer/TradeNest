@@ -77,7 +77,7 @@ const Predict = () => {
         }, 800);
 
         const res = await axios.get(`${import.meta.env.VITE_API_URL}/predict/${selectedStock}`, {
-          withCredentials: true,
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
         });
 
         clearInterval(interval);

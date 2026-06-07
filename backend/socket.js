@@ -35,18 +35,19 @@ function init(server) {
   });
 
   io.use((socket, next) => {
-    const cookieHeader = socket.handshake.headers.cookie || '';
-    const tokenMatch = cookieHeader.match(/token=([^;]+)/);
-    const token = tokenMatch && tokenMatch[1];
-    if (!token) return next(new Error('Auth error - token missing'));
-    try {
-      const decoded = jwt.verify(token, process.env.TOKEN_KEY);
-      socket.userId = decoded.id;
-      next();
-    } catch (e) {
-      next(new Error('Auth error - invalid token'));
-    }
-  });
+  // const cookieHeader = socket.handshake.headers.cookie || '';
+  // const tokenMatch = cookieHeader.match(/token=([^;]+)/);
+  // const token = tokenMatch && tokenMatch[1];
+  const token = socket.handshake.auth.token; // Use auth object from frontend
+  if (!token) return next(new Error('Auth error - token missing'));
+  try {
+    const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+    socket.userId = decoded.id;
+    next();
+  } catch (e) {
+    next(new Error('Auth error - invalid token'));
+  }
+});
 
   io.on('connection', async (socket) => {
     const { userId } = socket;

@@ -30,7 +30,7 @@ const Menu = () => {
   useEffect(() => {
     axios
       .get(`${import.meta.env.VITE_API_URL}/userData`, {
-        withCredentials: true,
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       })
       .then((res) => {
         setAllData(res.data);
@@ -72,8 +72,9 @@ const Menu = () => {
   };
 
   const handleLogOut = async () => {
-    const res = await axios.post(`${import.meta.env.VITE_API_URL}/logout`, {}, { withCredentials: true });
+    const res = await axios.post(`${import.meta.env.VITE_API_URL}/logout`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
     if (res.data.status === "logout") {
+      localStorage.removeItem("token");
       const redirectUrl = import.meta.env.VITE_MAIN_URL || "https://trade-nest-six.vercel.app";
       window.location.href = redirectUrl.startsWith("http") ? redirectUrl : `https://${redirectUrl}`;
     }

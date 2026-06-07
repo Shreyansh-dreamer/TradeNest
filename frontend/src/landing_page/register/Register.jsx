@@ -10,7 +10,9 @@ const Register = () => {
   useEffect(() => {
   const fetchEmail = async () => {
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/getEmailFromToken`, {}, { withCredentials: true });
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/getEmailFromToken`, {}, {
+        headers: { Authorization: `Bearer ${tempToken}` } 
+      });
       if (res.data.email) setEmail(res.data.email);
       else window.location.href = "/signup";
     } catch (err) {
@@ -28,20 +30,14 @@ const Register = () => {
     }
 
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/signup`,
-        {
-          username,
-          password,
-        },
-        {
-          withCredentials: true,
-        }
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/signup`, 
+        { username, password }, 
+        { headers: { Authorization: `Bearer ${localStorage.getItem("tempToken")}` } } 
       );
-
       if (res.data.status === "yes") {
-        const redirectUrl = import.meta.env.VITE_DASHBOARD_URL || "https://trade-nest-dboard.vercel.app";
-        window.location.href = redirectUrl.startsWith("http") ? redirectUrl : `https://${redirectUrl}`;
+        localStorage.setItem("token", res.data.token); 
+        localStorage.removeItem("tempToken"); 
+        window.location.href = redirectUrl;
       } else {
         setStatusMessage(res.data.message || "Signup failed.");
       }

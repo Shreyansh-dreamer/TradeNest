@@ -18,7 +18,7 @@ const Summary = ({ allHoldings }) => {
   useEffect(() => {
     axios
       .get(`${import.meta.env.VITE_API_URL}/userData`, {
-        withCredentials: true,
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       })
       .then((res) => {
         setAllData(res.data);
@@ -32,7 +32,6 @@ const Summary = ({ allHoldings }) => {
 
   return (
     <div className="w-full p-4">
-      {/* User Greeting */}
       <div className="mb-5">
         <h6 className="text-lg font-semibold text-[var(--text-primary)]">
           Welcome back, {allData.username || "—"}
@@ -40,7 +39,6 @@ const Summary = ({ allHoldings }) => {
         <hr className="my-3 border-[var(--border-color)]" />
       </div>
 
-      {/* Equity Section */}
       <div className="mb-5">
         <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">Equity Overview</p>
         <div className="bg-[var(--bg-card)] p-4 rounded-lg border border-[var(--border-color)]">
@@ -75,7 +73,6 @@ const Summary = ({ allHoldings }) => {
         <hr className="my-4 border-[var(--border-color)]" />
       </div>
 
-      {/* Holdings Section */}
       <div>
         <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">
           Holdings ({allHoldings.length})
