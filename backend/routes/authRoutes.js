@@ -17,9 +17,11 @@ router.post('/getOtp', async (req, res) => {
   otpStore.set(email, { otp, expiresAt });
 
   try {
+    console.log("Attempting to send OTP to:", email);
     await sendOtpMail(email, otp);
     res.status(200).json({ message: 'OTP sent' });
   } catch (err) {
+    console.error("FULL ERROR DETAILS:", err); 
     res.status(500).json({ message: 'Error sending OTP', error: err.message });
   }
 });
